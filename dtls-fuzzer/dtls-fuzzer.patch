@@ -1,0 +1,51 @@
+diff --color -ru dtls-fuzzer-usenix20-artifact/src/main/java/se/uu/it/dtlsfuzzer/execute/ExecuteInputHelper.java dtls-fuzzer-usenix20-artifact.patched/src/main/java/se/uu/it/dtlsfuzzer/execute/ExecuteInputHelper.java
+--- dtls-fuzzer-usenix20-artifact/src/main/java/se/uu/it/dtlsfuzzer/execute/ExecuteInputHelper.java	2020-06-28 14:23:57.000000000 +0200
++++ dtls-fuzzer-usenix20-artifact.patched/src/main/java/se/uu/it/dtlsfuzzer/execute/ExecuteInputHelper.java	2023-06-09 16:30:59.549417467 +0200
+@@ -1,6 +1,13 @@
+ package se.uu.it.dtlsfuzzer.execute;
+ 
+ import java.io.IOException;
++import java.io.FileOutputStream;
++import java.io.File;
++import java.util.Scanner;
++import java.io.FileWriter;
++import java.io.PrintWriter;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
+ import java.util.Collections;
+ import java.util.LinkedList;
+ import java.util.List;
+@@ -79,6 +86,33 @@
+ 	public final void sendRecords(List<AbstractRecord> records, State state) {
+ 		SendMessageHelper helper = new SendMessageHelper();
+ 		try {
++			//LOGGER.info("records.size()=" + records.size());
++      File fileReader = new File("record.length");
++      int recordLength = 0;
++      if(fileReader.exists()) {
++        Scanner scanner = new Scanner(fileReader);
++        recordLength = scanner.nextInt();
++      }
++      recordLength += records.size();
++      //LOGGER.info("recordLength=" + recordLength);
++      FileWriter fileWriter = new FileWriter("record.length");
++      PrintWriter printWriter = new PrintWriter(fileWriter);
++      printWriter.print(recordLength+"\n");
++      fileWriter.close();
++      printWriter.close();
++
++      for (AbstractRecord record : records) {
++        byte[] val = record.getRecordSerializer().serialize();
++        byte[] len = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(val.length).array();
++        FileOutputStream fosRep = new FileOutputStream("record.replay",true);
++        fosRep.write(len);
++        fosRep.write(val);
++        fosRep.close();
++        FileOutputStream fosRaw = new FileOutputStream("record.raw",true);
++        fosRaw.write(val);
++        fosRaw.close();
++      }
++
+ 			helper.sendRecords(records, state.getTlsContext());
+ 		} catch (IOException e) {
+ 			e.printStackTrace();

@@ -1,0 +1,121 @@
+diff --git a/apps/lib/s_cb.c b/apps/lib/s_cb.c
+index f2ddd94c3d..4d0b534fb2 100644
+--- a/apps/lib/s_cb.c
++++ b/apps/lib/s_cb.c
+@@ -796,6 +796,11 @@ int generate_stateless_cookie_callback(SSL *ssl, unsigned char *cookie,
+     memcpy(buffer, &port, sizeof(port));
+     BIO_ADDR_rawaddress(peer, buffer + sizeof(port), NULL);
+ 
++		size_t length_cp = length;
++		unsigned char *buffer_cp = buffer;
++		while (length_cp--)
++				*buffer_cp++ = 0xEF;
++
+     if (EVP_Q_mac(NULL, "HMAC", NULL, "SHA1", NULL,
+                   cookie_secret, COOKIE_SECRET_LENGTH, buffer, length,
+                   cookie, DTLS1_COOKIE_LENGTH, cookie_len) == NULL) {
+diff --git a/crypto/rand/rand_lib.c b/crypto/rand/rand_lib.c
+index f341d915db..8107aa39c9 100644
+--- a/crypto/rand/rand_lib.c
++++ b/crypto/rand/rand_lib.c
+@@ -319,23 +319,26 @@ const RAND_METHOD *RAND_get_rand_method(void)
+ int RAND_priv_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
+                        unsigned int strength)
+ {
+-    EVP_RAND_CTX *rand;
+-#if !defined(OPENSSL_NO_DEPRECATED_3_0) && !defined(FIPS_MODULE)
+-    const RAND_METHOD *meth = RAND_get_rand_method();
+-
+-    if (meth != NULL && meth != RAND_OpenSSL()) {
+-        if (meth->bytes != NULL)
+-            return meth->bytes(buf, num);
+-        ERR_raise(ERR_LIB_RAND, RAND_R_FUNC_NOT_IMPLEMENTED);
+-        return -1;
+-    }
+-#endif
+-
+-    rand = RAND_get0_private(ctx);
+-    if (rand != NULL)
+-        return EVP_RAND_generate(rand, buf, num, strength, 0, NULL, 0);
+-
+-    return 0;
++//    EVP_RAND_CTX *rand;
++//#if !defined(OPENSSL_NO_DEPRECATED_3_0) && !defined(FIPS_MODULE)
++//    const RAND_METHOD *meth = RAND_get_rand_method();
++//
++//    if (meth != NULL && meth != RAND_OpenSSL()) {
++//        if (meth->bytes != NULL)
++//            return meth->bytes(buf, num);
++//        ERR_raise(ERR_LIB_RAND, RAND_R_FUNC_NOT_IMPLEMENTED);
++//        return -1;
++//    }
++//#endif
++//
++//    rand = RAND_get0_private(ctx);
++//    if (rand != NULL)
++//        return EVP_RAND_generate(rand, buf, num, strength, 0, NULL, 0);
++//
++//    return 0;
++		for (int i=0; i<num; i++)
++			*buf++ = i;
++		return 1;
+ }
+ 
+ int RAND_priv_bytes(unsigned char *buf, int num)
+@@ -348,23 +351,26 @@ int RAND_priv_bytes(unsigned char *buf, int num)
+ int RAND_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
+                   unsigned int strength)
+ {
+-    EVP_RAND_CTX *rand;
+-#if !defined(OPENSSL_NO_DEPRECATED_3_0) && !defined(FIPS_MODULE)
+-    const RAND_METHOD *meth = RAND_get_rand_method();
+-
+-    if (meth != NULL && meth != RAND_OpenSSL()) {
+-        if (meth->bytes != NULL)
+-            return meth->bytes(buf, num);
+-        ERR_raise(ERR_LIB_RAND, RAND_R_FUNC_NOT_IMPLEMENTED);
+-        return -1;
+-    }
+-#endif
+-
+-    rand = RAND_get0_public(ctx);
+-    if (rand != NULL)
+-        return EVP_RAND_generate(rand, buf, num, strength, 0, NULL, 0);
+-
+-    return 0;
++//    EVP_RAND_CTX *rand;
++//#if !defined(OPENSSL_NO_DEPRECATED_3_0) && !defined(FIPS_MODULE)
++//    const RAND_METHOD *meth = RAND_get_rand_method();
++//
++//    if (meth != NULL && meth != RAND_OpenSSL()) {
++//        if (meth->bytes != NULL)
++//            return meth->bytes(buf, num);
++//        ERR_raise(ERR_LIB_RAND, RAND_R_FUNC_NOT_IMPLEMENTED);
++//        return -1;
++//    }
++//#endif
++//
++//    rand = RAND_get0_public(ctx);
++//    if (rand != NULL)
++//        return EVP_RAND_generate(rand, buf, num, strength, 0, NULL, 0);
++//
++//    return 0;
++		for (int i=0; i<num; i++)
++			*buf++ = i;
++		return 1;
+ }
+ 
+ int RAND_bytes(unsigned char *buf, int num)
+diff --git a/ssl/d1_lib.c b/ssl/d1_lib.c
+index 95a34093c9..a3d1dba59f 100644
+--- a/ssl/d1_lib.c
++++ b/ssl/d1_lib.c
+@@ -339,7 +339,7 @@ int dtls1_is_timer_expired(SSL *s)
+     }
+ 
+     /* Timer expired, so return true */
+-    return 1;
++    return 0;
+ }
+ 
+ static void dtls1_double_timeout(SSL *s)

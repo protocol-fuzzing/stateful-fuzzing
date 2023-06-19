@@ -1,0 +1,221 @@
+diff --git a/dtls.c b/dtls.c
+index 61273ff..723c1ad 100644
+--- a/dtls.c
++++ b/dtls.c
+@@ -387,48 +387,51 @@ dtls_create_cookie(dtls_context_t *ctx,
+ 
+   /* Note that the buffer size must fit with the default hash algorithm. */
+ 
+-  dtls_hmac_context_t hmac_context;
+-  dtls_hmac_init(&hmac_context, ctx->cookie_secret, DTLS_COOKIE_SECRET_LENGTH);
++	for (int i=0; i<*clen; i++) {
++		cookie[i] = 1;
++	}
++  //dtls_hmac_context_t hmac_context;
++  //dtls_hmac_init(&hmac_context, ctx->cookie_secret, DTLS_COOKIE_SECRET_LENGTH);
+ 
+-  dtls_hmac_update(&hmac_context,
+-		   (unsigned char *)&session->addr, session->size);
++  //dtls_hmac_update(&hmac_context,
++	//	   (unsigned char *)&session->addr, session->size);
+ 
+-  /* feed in the beginning of the Client Hello up to and including the
+-     session id */
+-  e = DTLS_CH_LENGTH;
+-  if (e + DTLS_HS_LENGTH + sizeof(uint8_t) > msglen)
+-    return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
++  ///* feed in the beginning of the Client Hello up to and including the
++  //   session id */
++  //e = DTLS_CH_LENGTH;
++  //if (e + DTLS_HS_LENGTH + sizeof(uint8_t) > msglen)
++  //  return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
+ 
+-  e += dtls_uint8_to_int(msg + DTLS_HS_LENGTH + e) + sizeof(uint8_t);
++  //e += dtls_uint8_to_int(msg + DTLS_HS_LENGTH + e) + sizeof(uint8_t);
+ 
+-  if (e + DTLS_HS_LENGTH > msglen)
+-    return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
++  //if (e + DTLS_HS_LENGTH > msglen)
++  //  return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
+ 
+-  dtls_hmac_update(&hmac_context, msg + DTLS_HS_LENGTH, e);
++  //dtls_hmac_update(&hmac_context, msg + DTLS_HS_LENGTH, e);
+ 
+-  if (e + DTLS_HS_LENGTH + sizeof(uint8_t) > msglen)
+-    return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
+-  /* skip cookie bytes and length byte */
+-  e += dtls_uint8_to_int(msg + DTLS_HS_LENGTH + e);
+-  e += sizeof(uint8_t);
++  //if (e + DTLS_HS_LENGTH + sizeof(uint8_t) > msglen)
++  //  return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
++  ///* skip cookie bytes and length byte */
++  //e += dtls_uint8_to_int(msg + DTLS_HS_LENGTH + e);
++  //e += sizeof(uint8_t);
+ 
+-  /* read fragment length and check for consistency */
+-  fragment_length = dtls_get_fragment_length(DTLS_HANDSHAKE_HEADER(msg));
+-  if ((fragment_length < e) || (e + DTLS_HS_LENGTH) > msglen)
+-    return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
++  ///* read fragment length and check for consistency */
++  //fragment_length = dtls_get_fragment_length(DTLS_HANDSHAKE_HEADER(msg));
++  //if ((fragment_length < e) || (e + DTLS_HS_LENGTH) > msglen)
++  //  return dtls_alert_fatal_create(DTLS_ALERT_HANDSHAKE_FAILURE);
+ 
+-  dtls_hmac_update(&hmac_context,
+-		   msg + DTLS_HS_LENGTH + e,
+-		   fragment_length - e);
++  //dtls_hmac_update(&hmac_context,
++	//	   msg + DTLS_HS_LENGTH + e,
++	//	   fragment_length - e);
+ 
+-  len = dtls_hmac_finalize(&hmac_context, buf);
++  //len = dtls_hmac_finalize(&hmac_context, buf);
+ 
+-  if (len < *clen) {
+-    memset(cookie + len, 0, *clen - len);
+-    *clen = len;
+-  }
++  //if (len < *clen) {
++  //  memset(cookie + len, 0, *clen - len);
++  //  *clen = len;
++  //}
+ 
+-  memcpy(cookie, buf, *clen);
++  //memcpy(cookie, buf, *clen);
+   return 0;
+ }
+ 
+diff --git a/dtls_time.c b/dtls_time.c
+index 9a9cecf..7c31987 100644
+--- a/dtls_time.c
++++ b/dtls_time.c
+@@ -112,6 +112,7 @@ void dtls_ticks(dtls_tick_t *t) {
+ #else
+ #error "clock not implemented"
+ #endif
++	*t = 1682086314 * DTLS_TICKS_PER_SECOND;
+ }
+ 
+ #endif /* ! CONTIKI && ! RIOT_VERSION && ! WITH_ZEPHYR && ! WITH_LWIP && ! WITH_POSIX */
+diff --git a/platform-specific/dtls_prng_posix.c b/platform-specific/dtls_prng_posix.c
+index 3c9d51f..c3cc3af 100644
+--- a/platform-specific/dtls_prng_posix.c
++++ b/platform-specific/dtls_prng_posix.c
+@@ -35,38 +35,39 @@
+  */
+ int
+ dtls_prng(unsigned char *buf, size_t len) {
+-#ifdef HAVE_GETRANDOM
+-  return getrandom(buf, len, 0);
+-#elif defined(HAVE_RANDOM)
+-
+-#define RAND_BYTES (RAND_MAX >= 0xffffff ? 3 : (RAND_MAX >= 0xffff ? 2 : 1))
+-
+-  if (len) {
+-    size_t klen = len;
+-    uint8_t byte_counter = RAND_BYTES;
+-    uint32_t rand = random();
+-    while (1) {
+-      *buf++ = rand & 0xFF;
+-      if (!--klen) {
+-        break;
+-      }
+-      if (--byte_counter) {
+-        rand >>= 8;
+-      } else {
+-        rand = random();
+-        byte_counter = RAND_BYTES;
+-      }
+-    }
+-  }
+-  return len;
+-#else /*!HAVE_GETRANDOM && !HAVE_RANDOM */
+-  #error "CVE-2021-34430: using rand() for crypto randoms is not secure!"
+-  #error "Please update you C-library and rerun the auto-configuration."
++//#ifdef HAVE_GETRANDOM
++//  return getrandom(buf, len, 0);
++//#elif defined(HAVE_RANDOM)
++//
++//#define RAND_BYTES (RAND_MAX >= 0xffffff ? 3 : (RAND_MAX >= 0xffff ? 2 : 1))
++//
++//  if (len) {
++//    size_t klen = len;
++//    uint8_t byte_counter = RAND_BYTES;
++//    uint32_t rand = random();
++//    while (1) {
++//      *buf++ = rand & 0xFF;
++//      if (!--klen) {
++//        break;
++//      }
++//      if (--byte_counter) {
++//        rand >>= 8;
++//      } else {
++//        rand = random();
++//        byte_counter = RAND_BYTES;
++//      }
++//    }
++//  }
++//  return len;
++//#else /*!HAVE_GETRANDOM && !HAVE_RANDOM */
++//  #error "CVE-2021-34430: using rand() for crypto randoms is not secure!"
++//  #error "Please update you C-library and rerun the auto-configuration."
+   size_t klen = len;
+   while (len--)
+-    *buf++ = rand() & 0xFF;
++//    *buf++ = rand() & 0xFF;
++    *buf++ = 0xEF;
+   return klen;
+-#endif /* !HAVE_GETRANDOM */
++//#endif /* !HAVE_GETRANDOM */
+ }
+ 
+ void
+diff --git a/tests/dtls-client.c b/tests/dtls-client.c
+index e6a4c9c..717c3b7 100644
+--- a/tests/dtls-client.c
++++ b/tests/dtls-client.c
+@@ -40,7 +40,7 @@
+ #define DEFAULT_PORT 20220
+ 
+ #define PSK_DEFAULT_IDENTITY "Client_identity"
+-#define PSK_DEFAULT_KEY      "secretPSK"
++#define PSK_DEFAULT_KEY      "1234"
+ #define PSK_OPTIONS          "i:k:"
+ 
+ #ifdef __GNUC__
+@@ -112,8 +112,8 @@ read_from_file(char *arg, unsigned char *buf, size_t max_buf_len) {
+ #define PSK_MAXLEN 256
+ static unsigned char psk_id[PSK_ID_MAXLEN];
+ static size_t psk_id_length = 0;
+-static unsigned char psk_key[PSK_MAXLEN];
+-static size_t psk_key_length = 0;
++static unsigned char psk_key[] = {0x12, 0x34};
++static size_t psk_key_length = 2;
+ 
+ /* This function is the "key store" for tinyDTLS. It is called to
+  * retrieve a key for the given identity within this particular
+@@ -388,9 +388,9 @@ main(int argc, char **argv) {
+ 
+ #ifdef DTLS_PSK
+   psk_id_length = strlen(PSK_DEFAULT_IDENTITY);
+-  psk_key_length = strlen(PSK_DEFAULT_KEY);
++  //psk_key_length = strlen(PSK_DEFAULT_KEY);
+   memcpy(psk_id, PSK_DEFAULT_IDENTITY, psk_id_length);
+-  memcpy(psk_key, PSK_DEFAULT_KEY, psk_key_length);
++  //memcpy(psk_key, PSK_DEFAULT_KEY, psk_key_length);
+ #endif /* DTLS_PSK */
+ 
+   while ((opt = getopt(argc, argv, "p:o:v:" PSK_OPTIONS)) != -1) {
+diff --git a/tests/dtls-server.c b/tests/dtls-server.c
+index 5a3c03c..08cc233 100644
+--- a/tests/dtls-server.c
++++ b/tests/dtls-server.c
+@@ -82,7 +82,7 @@ get_psk_info(struct dtls_context_t *ctx, const session_t *session,
+     size_t key_length;
+   } psk[3] = {
+     { (unsigned char *)"Client_identity", 15,
+-      (unsigned char *)"secretPSK", 9 },
++      (unsigned char *)"\x12\x34", 2 },
+     { (unsigned char *)"default identity", 16,
+       (unsigned char *)"\x11\x22\x33", 3 },
+     { (unsigned char *)"\0", 2,

@@ -52,74 +52,29 @@ ARG MAKE_OPT
 # Set up environment variables
 ENV DTLS_FUZZER="/home/ubuntu/dtls-fuzzer"
 
-## Set up DTLS-fuzzer
+# Set up DTLS-fuzzer
+COPY --chown=ubuntu:ubuntu dtls-fuzzer.patch ${WORKDIR}/dtls-fuzzer.patch
 RUN wget https://github.com/assist-project/dtls-fuzzer/archive/refs/tags/usenix20-artifact.tar.gz && \
     tar -xvf usenix20-artifact.tar.gz && \
-		mv dtls-fuzzer-usenix20-artifact $DTLS_FUZZER && \
-		cd $DTLS_FUZZER && \
+		mv dtls-fuzzer-usenix20-artifact ${DTLS_FUZZER} && \
+		cd ${DTLS_FUZZER} && \
+    patch -p1 < ${WORKDIR}/dtls-fuzzer.patch && \
 		bash prepare.sh && \
 		mvn clean install
 
-#		git checkout 0f51f9e && \
-#    patch -p1 < $WORKDIR/aflnet.patch && \
-#    make clean all $MAKE_OPT && \
-#    cd llvm_mode && make $MAKE_OPT
+# Set up the SUTs
+COPY --chown=ubuntu:ubuntu setup_sut.sh ${DTLS_FUZZER}/setup_sut.sh
+COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
+COPY --chown=ubuntu:ubuntu patches ${DTLS_FUZZER}/experiments/patches
 
-#COPY --chown=ubuntu:ubuntu aflnet.patch ${WORKDIR}/aflnet.patch
-#
-## Set up fuzzers
-#RUN git clone https://github.com/profuzzbench/aflnet.git && \
-#    cd aflnet && \
-#		git checkout 0f51f9e && \
-#    patch -p1 < $WORKDIR/aflnet.patch && \
-#    make clean all $MAKE_OPT && \
-#    cd llvm_mode && make $MAKE_OPT
-#
-#RUN git clone https://github.com/profuzzbench/aflnwe.git && \
-#    cd aflnwe && \
-#    make clean all $MAKE_OPT && \
-#    cd llvm_mode && make $MAKE_OPT
-#
-## Set up environment variables for AFLNet
-#ENV WORKDIR="/home/ubuntu/experiments"
-#ENV AFLNET="/home/ubuntu/aflnet"
-#ENV PATH="${PATH}:${AFLNET}:/home/ubuntu/.local/bin:${WORKDIR}"
-#ENV AFL_PATH="${AFLNET}"
-#ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
-#    AFL_SKIP_CPUFREQ=1 \
-#    AFL_NO_AFFINITY=1
-#
-#
-#RUN mkdir $WORKDIR
-#
-#COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
-#COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
-#
-## Set up environment variables for ASAN
-#env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
-#
-## Download and compile Eclipse TinyDTLS for fuzzing
-#RUN cd $WORKDIR && \
-#    git clone https://github.com/eclipse/tinydtls tinydtls && \
-#    cd tinydtls && \
-#		git checkout de74a02 && \
-#    patch -p1 < $WORKDIR/fuzzing.patch && \
-#		./autogen.sh && \
-#		CC=afl-clang-fast ./configure && \
-#    make clean && \
-#    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
-#
-## Download and compile aSSIsT TinyDTLS for coverage analysis
-#RUN cd $WORKDIR && \
-#    git clone https://github.com/eclipse/tinydtls tinydtls-gcov && \
-#    cd tinydtls-gcov && \
-#		git checkout de74a02 && \
-#    patch -p1 < $WORKDIR/gcov.patch && \
-#		./autogen.sh && \
-#		./configure && \
-#    cov=1 make clean && \
-#    cov=1 make $MAKE_OPT
-#
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
+#RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
+
+# Set up the scripts
+#TODO
 #COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
 #COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 #COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
