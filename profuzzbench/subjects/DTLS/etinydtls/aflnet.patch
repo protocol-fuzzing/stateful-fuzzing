@@ -1,0 +1,45 @@
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index 8023451..8c3993e 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -1021,8 +1021,8 @@ int send_over_network()
+   //Set timeout for socket data sending/receiving -- otherwise it causes a big delay
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout_usecs;
++  timeout.tv_sec = socket_timeout_usecs / 1000000;
++  timeout.tv_usec = socket_timeout_usecs % 1000000;
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
+   memset(&serv_addr, '0', sizeof(serv_addr));
+diff --git a/afl-replay.c b/afl-replay.c
+index dfa43d0..bf61042 100644
+--- a/afl-replay.c
++++ b/afl-replay.c
+@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+ 
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout;
++  timeout.tv_sec = socket_timeout / 1000000;
++  timeout.tv_usec = socket_timeout % 1000000;
+ 
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
+diff --git a/aflnet-replay.c b/aflnet-replay.c
+index 7a5ae23..48e2e10 100644
+--- a/aflnet-replay.c
++++ b/aflnet-replay.c
+@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+ 
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout;
++  timeout.tv_sec = socket_timeout / 1000000;
++  timeout.tv_usec = socket_timeout % 1000000;
+ 
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
