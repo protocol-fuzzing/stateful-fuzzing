@@ -30,6 +30,7 @@ RUN apt-get -y update && \
 		autotools-dev \
 		automake \
 		libtool \
+		bsdmainutils \
 		tshark
 
 # Add a new user ubuntu, pass: ubuntu
@@ -51,6 +52,8 @@ ARG MAKE_OPT
 
 # Set up environment variables
 ENV DTLS_FUZZER="/home/ubuntu/dtls-fuzzer"
+ENV SCRIPTS="/home/ubuntu/scripts"
+ENV PATH="${PATH}:${SCRIPTS}"
 
 # Set up DTLS-fuzzer
 COPY --chown=ubuntu:ubuntu dtls-fuzzer.patch ${WORKDIR}/dtls-fuzzer.patch
@@ -70,11 +73,8 @@ COPY --chown=ubuntu:ubuntu patches ${DTLS_FUZZER}/experiments/patches
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
-#RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
 
 # Set up the scripts
-#TODO
-#COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
-#COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
-#COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu scripts ${SCRIPTS}
