@@ -53,6 +53,7 @@ ARG MAKE_OPT
 # Set up environment variables
 ENV DTLS_FUZZER="/home/ubuntu/dtls-fuzzer"
 ENV SCRIPTS="/home/ubuntu/scripts"
+ENV AUTOMATA="/home/ubuntu/automata"
 ENV PATH="${PATH}:${SCRIPTS}"
 
 # Set up DTLS-fuzzer
@@ -67,9 +68,7 @@ RUN wget https://github.com/assist-project/dtls-fuzzer/archive/refs/tags/usenix2
 
 # Set up the SUTs
 COPY --chown=ubuntu:ubuntu setup_sut.sh ${DTLS_FUZZER}/setup_sut.sh
-COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
 COPY --chown=ubuntu:ubuntu patches ${DTLS_FUZZER}/experiments/patches
-COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples
 
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
@@ -77,5 +76,10 @@ RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
 
+COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
+COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples
+
 # Set up the scripts
 COPY --chown=ubuntu:ubuntu scripts ${SCRIPTS}
+
+RUN mkdir ${AUTOMATA}
