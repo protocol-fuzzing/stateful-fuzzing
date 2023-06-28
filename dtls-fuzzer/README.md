@@ -112,9 +112,9 @@ Where:
 A compressed archive named `[sut]_automata_seeds.tar.gz` containing a set of seeds.
 
 The set of abstract seeds is produced from the automata, as followed:
-1. First, a transition cover $Cov$ is computed, i.e. a set of traces $\rho=i_1 \dots i_n$ that cover all the transitions of the automata. This transition cover is *minimal* in that sense: there are no traces $\rho,\rho'\in Cov$ such that $\rho$ is the prefix of $\rho'$.
-2. Then, we defined the set $S=\{(\rho,k) \mid \rho=i_1 \dots i_n \in Cov \text{ and } k \in \[1 .. n\]\}$. A couple $(\rho,k)$ with $\rho=i_1 \dots i_n$ defined a prefix $i_1 \dots i_k$ and a suffix $i_{k+1} \dots i_n$.
-3. Finally a subset $S_m \subseteq S$ is defined such that it nevers contain the same prefix twice: $\forall (\rho,k), (\rho',k') \in S_m$, where $\rho=i_1 \dots i_n$ and ${\rho}'={{i}'}_1 \dots {{i}'}_{{n}'}$, $i_1 \dots i_k \neq {{i}'}_1 \dots {{i}'}_{{k}'}$.
+1. First, a transition cover $Cov$ is computed, i.e. a set of traces $\rho=i_1 \dots i_n$ covering all the transitions of the automata. This transition cover is *minimal* in that sense: there are no traces $\rho,\rho'\in Cov$ such that $\rho$ is the prefix of $\rho'$.
+2. Then, we defined the set $`S=\{(\rho,k) \mid \rho=i_1 \dots i_n \in Cov \text{ and } k \in \[1 .. n\]\}`$. A couple $(\rho,k)$ with $\rho=i_1 \dots i_n$ defined a prefix $i_1 \dots i_k$ and a suffix $i_{k+1} \dots i_n$.
+3. Finally a subset $S_m \subseteq S$ is defined such that it nevers contain the same prefix twice: $\forall (\rho,k), (\rho',k') \in S_m$, where $\rho=i_1 \dots i_n$ and $`\rho'=i'_1 \dots i'_{n'}`$, $`i_1 \dots i_k \neq i'_1 \dots i'_{k'}`$.
 
 Note that the three sets $Cov$, $S$ and $S_m$ are not unique, we compute only ones of them.
 
