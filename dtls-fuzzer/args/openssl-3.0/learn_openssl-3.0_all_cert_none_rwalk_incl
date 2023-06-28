@@ -5,13 +5,11 @@ localhost:30001
 -runWait 
 200
 -timeout
-20
+40
 -randLength
 10
 -queries
 20000
--equivalenceAlgorithms 
-RANDOM_WP_METHOD,WP_METHOD 
 -alphabet 
 examples/alphabets/dhe_ecdhe_psk_rsa_cert.xml
 -output 
