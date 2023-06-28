@@ -19,13 +19,13 @@ for f in ${ABSFILES} ; do
 	concretize_one.sh ${SUT} ${f} ${ARGSFILE} 
 	if ! cmp -s ${OUTDIR}/${sname}.length send.length ; then
 		echo "Real and abstract seeds' length match: SAVED"
-		mv send.length ${OUTDIR}/${sname}_client.length
-		mv send.raw ${OUTDIR}/${sname}_client.raw
-		mv send.replay ${OUTDIR}/${sname}_client.replay
+		mv send.length ${OUTDIR}/${sname}.total_length
+		mv send.raw ${OUTDIR}/${sname}.raw
+		mv send.replay ${OUTDIR}/${sname}.replay
 		if [ -f "recv.length" ]; then
-			mv recv.length ${OUTDIR}/${sname}_server.length
-			mv recv.raw ${OUTDIR}/${sname}_server.raw
-			mv recv.replay ${OUTDIR}/${sname}_server.replay
+			rm recv.length
+			rm recv.raw
+			rm recv.replay
 		fi
 	else
 		echo "Real and abstract seeds' length doesn't match: DISCARDED"
