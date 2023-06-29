@@ -7,8 +7,8 @@ OUTDIR="$4"		# Output directory
 
 DTLS_FUZZER="/home/ubuntu/dtls-fuzzer"
 AUTOMATA="/home/ubuntu/automata"
-DOCKER_OUTDIR=${SUT}_automata_seeds
 DOTFILE_NAME=${DOTFILE##*/}
+DOCKER_OUTDIR=${DOTFILE_NAME%.*}_automata_seeds
 
 #create one container for each run
 id=$(docker run --cpus=1 -d -it --mount type=bind,source="$(pwd)"/${DOTFILE},target=${AUTOMATA}/${DOTFILE_NAME},readonly dtls-fuzzer /bin/bash -c "cd ${DTLS_FUZZER} && concretize_automata.sh ${SUT} ${ARGSFILE} ${AUTOMATA}/${DOTFILE_NAME} ${DOCKER_OUTDIR} && tar -czvf ${DOCKER_OUTDIR}.tar.gz ${DOCKER_OUTDIR}")
