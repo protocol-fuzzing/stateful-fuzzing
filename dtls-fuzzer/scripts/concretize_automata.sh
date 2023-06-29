@@ -31,6 +31,6 @@ for f in ${ABSFILES} ; do
 		echo "Real and abstract seeds' length doesn't match: DISCARDED"
 		rm send.* recv.*
 		mv ${OUTDIR}/${sname}.abstra ${OUTDIR}/${sname}.abstra.discard
-		mv ${OUTDIR}/${sname}.length ${OUTDIR}/${sname}.abstra.length
+		mv ${OUTDIR}/${sname}.length ${OUTDIR}/${sname}.length.discard
 	fi
 done
