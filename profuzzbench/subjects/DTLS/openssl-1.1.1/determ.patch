@@ -1,17 +1,3 @@
-diff --git a/apps/openssl.c b/apps/openssl.c
-index f35d57f264..18dc9ddd13 100644
---- a/apps/openssl.c
-+++ b/apps/openssl.c
-@@ -41,6 +41,9 @@ typedef struct {
- /* Special sentinel to exit the program. */
- #define EXIT_THE_PROGRAM (-1)
- 
-+#define FUZZTIME 1485898104
-+time_t time(time_t *t) { if (t != NULL) *t = FUZZTIME; return FUZZTIME; }
-+
- /*
-  * The LHASH callbacks ("hash" & "cmp") have been replaced by functions with
-  * the base prototypes (we cast each variable inside the function to the
 diff --git a/apps/s_cb.c b/apps/s_cb.c
 index 2f94c13393..49d13ca941 100644
 --- a/apps/s_cb.c
@@ -130,3 +116,16 @@ index 3fdb56cb00..d96d1b9f63 100644
  }
  
  #if OPENSSL_API_COMPAT < 0x10100000L
+diff --git a/ssl/d1_lib.c b/ssl/d1_lib.c
+index 05b85c1078..44f8a627ea 100644
+--- a/ssl/d1_lib.c
++++ b/ssl/d1_lib.c
+@@ -339,7 +339,7 @@ int dtls1_is_timer_expired(SSL *s)
+     }
+ 
+     /* Timer expired, so return true */
+-    return 1;
++    return 0;
+ }
+ 
+ static void dtls1_double_timeout(SSL *s)
