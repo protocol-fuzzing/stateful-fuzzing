@@ -14,8 +14,6 @@ examples/alphabets/psk.xml
 DTLS12
 -output
 output/wolfssl_psk_rwalk
--equivalenceAlgorithms
-RANDOM_WP_METHOD,WP_METHOD
 -cmd
 "${fuzzer.dir}/suts/wolfssl/examples/server/server  -i -x -p 60005 -s -u -l PSK-AES128-CBC-SHA256"
 -processDir
