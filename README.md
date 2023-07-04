@@ -14,6 +14,7 @@ The fuzzing can be carried out by the following fuzzers (for comparison):
  - [AFLNet](https://github.com/aflnet/aflnet)
  - [StateAFL](https://github.com/stateafl/stateafl)
  - [AFL-ML](https://github.com/remiparrot/aflnet), which is the one using the learned automata
+
 The fuzzing step is integrated in an extension of [ProFuzzBench](https://github.com/profuzzbench/profuzzbench).
 
 
@@ -35,7 +36,7 @@ See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/
 Use the script `df_concretize_seeds.sh`, in the subfolder `dtls-fuzzer`.
 See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more informations.
 
-3. Copy the seeds in the fuzzing docker
+2. Copy the seeds in the fuzzing docker
 
 For AFLNet, copy the files `*.raw` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls/`.
 Build the docker of the target SUT:
@@ -50,7 +51,7 @@ cd profuzzbench/subjects/DTLS/[SUT]/
 docker build -t profuzz-[SUT]-stateafl . -f Dockerfile-stateafl
 ```
 
-4. Run the fuzzing
+3. Run the fuzzing
 
 Use the script of ProFuzzBench to run the fuzzing, for example:
 ```sh
