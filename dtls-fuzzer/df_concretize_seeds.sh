@@ -4,9 +4,10 @@ SUT="$1"			# SUT name (e.g., openssl-1.1.1) -- this name must match the name of 
 ABSFILES="$2"	# List of filename of the abstract seeds to concretize
 ARGSFILE="$3"	# Filename of the args for dtls-fuzzer
 OUTDIR="$4"		# Output directory
+OUTFILE="$5"	# Output archive filename (optional)
 
 DTLS_FUZZER="/home/ubuntu/dtls-fuzzer"
-DOCKER_OUTDIR=${SUT}_seeds
+DOCKER_OUTDIR=${OUTFILE:-${SUT}_seeds}
 
 #create one container for each run
 id=$(docker run --cpus=1 -d -it dtls-fuzzer /bin/bash -c "cd ${DTLS_FUZZER} && mkdir ${DOCKER_OUTDIR} && concretize_seeds.sh ${SUT} '${ABSFILES}' ${ARGSFILE} ${DOCKER_OUTDIR} && tar -czvf ${DOCKER_OUTDIR}.tar.gz ${DOCKER_OUTDIR}")
