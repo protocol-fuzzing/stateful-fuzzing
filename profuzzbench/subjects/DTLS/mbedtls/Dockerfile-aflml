@@ -1,4 +1,4 @@
-FROM profuzz-openssl-3.0
+FROM profuzz-mbedtls
 
 # Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
 ARG MAKE_OPT
@@ -17,12 +17,11 @@ ENV PATH=${AFLML}:${PATH}
 
 # Dedicated instrumented version for AFL-ML
 RUN cd $WORKDIR && \
-    git clone https://github.com/openssl/openssl.git openssl-aflml && \
-    cd openssl-aflml && \
-		git checkout 39ed41b && \
-    patch -p1 < $WORKDIR/determ.patch && \
-		AFL_USE_ASAN=1 CC=afl-clang-fast ./config enable-asan enable-fuzz-afl no-shared no-module -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
-    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
+    git clone https://github.com/Mbed-TLS/mbedtls mbedtls-aflml && \
+    cd mbedtls-aflml && \
+		git checkout c2f5b08 && \
+		./scripts/config.py set MBEDTLS_PLATFORM_TIME_ALT && \
+    AFL_USE_ASAN=1 CC=${AFLML}/afl-clang-fast make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
 COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
