@@ -33,7 +33,7 @@ fi
 for f in $(echo $folder/$testdir/*.raw); do 
   time=$(stat -c %Y $f)
     
-  $replayer $f DTLS12 $pno 30 > /dev/null 2>&1 &
+  $replayer $f DTLS12 $pno 40 > /dev/null 2>&1 &
   LD_LIBRARY_PATH=./openssl-gcov timeout -k 0 3s ././openssl-gcov/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ./keystore/rsa2048_key.pem -cert ./keystore/rsa2048_cert.pem -CAfile ./keystore/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay -naccept 1 > /dev/null 2>&1
   
   wait
@@ -51,7 +51,7 @@ count=0
 for f in $(echo $folder/$testdir/id*); do 
   time=$(stat -c %Y $f)
   
-  $replayer $f DTLS12 $pno 30 > /dev/null 2>&1 &
+  $replayer $f DTLS12 $pno 40 > /dev/null 2>&1 &
   LD_LIBRARY_PATH=./openssl-gcov timeout -k 0 3s ././openssl-gcov/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ./keystore/rsa2048_key.pem -cert ./keystore/rsa2048_cert.pem -CAfile ./keystore/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay -naccept 1 > /dev/null 2>&1
 
   wait

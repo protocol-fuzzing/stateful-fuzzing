@@ -1,0 +1,6 @@
+FROM profuzz-openssl-3.0
+
+COPY --chown=ubuntu:ubuntu cert/in-dtls ${WORKDIR}/in-dtls
+COPY --chown=ubuntu:ubuntu cert/run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu cert/cov_script.sh ${WORKDIR}/cov_script
+
