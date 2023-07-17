@@ -19,7 +19,7 @@ ENV PATH=${AFLML}:${PATH}
 RUN cd $WORKDIR && \
     git clone  https://github.com/eclipse/tinydtls tinydtls-aflml && \
     cd tinydtls-aflml && \
-    git checkout de74a02 && \
+    git checkout 5e14e49 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
 		./autogen.sh && \
 		CC=${AFLML}/afl-clang-fast ./configure && \

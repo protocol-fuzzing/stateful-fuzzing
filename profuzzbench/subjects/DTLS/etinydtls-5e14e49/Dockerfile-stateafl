@@ -20,7 +20,7 @@ ENV PATH=${STATEAFL}:${PATH}
 RUN cd $WORKDIR && \
     git clone  https://github.com/eclipse/tinydtls tinydtls-stateafl && \
     cd tinydtls-stateafl && \
-    git checkout de74a02 && \
+    git checkout 5e14e49 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
 		./autogen.sh && \
 		CC=${STATEAFL}/afl-clang-fast ./configure && \

@@ -85,18 +85,6 @@ index 61273ff..723c1ad 100644
    return 0;
  }
  
-diff --git a/dtls_time.c b/dtls_time.c
-index 9a9cecf..7c31987 100644
---- a/dtls_time.c
-+++ b/dtls_time.c
-@@ -112,6 +112,7 @@ void dtls_ticks(dtls_tick_t *t) {
- #else
- #error "clock not implemented"
- #endif
-+	*t = 1682086314 * DTLS_TICKS_PER_SECOND;
- }
- 
- #endif /* ! CONTIKI && ! RIOT_VERSION && ! WITH_ZEPHYR && ! WITH_LWIP && ! WITH_POSIX */
 diff --git a/platform-specific/dtls_prng_posix.c b/platform-specific/dtls_prng_posix.c
 index 3c9d51f..c3cc3af 100644
 --- a/platform-specific/dtls_prng_posix.c
