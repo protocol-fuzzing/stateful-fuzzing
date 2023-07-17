@@ -75,6 +75,7 @@ RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls-5e14e49
 
 COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
 COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples

@@ -514,7 +514,7 @@ function make_sut() {
         #fi
     elif [[ $sut == wolfssl* ]]; then
         # this configuration is for PSK wolfssl
-        ( cd $sut_dir ; bash autogen.sh ; AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK )
+        ( cd $sut_dir ; bash autogen.sh ; AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK )
     elif [[ $sut == scandium* ]]; then
         for sc_prog in $sut_dir/sc*; do
             ( cd $sc_prog; mvn install; cp target/scandium*jar $SUTS_DIR )
