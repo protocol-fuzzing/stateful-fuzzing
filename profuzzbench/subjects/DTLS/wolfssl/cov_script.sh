@@ -33,7 +33,7 @@ fi
 for f in $(echo $folder/$testdir/*.raw); do 
   time=$(stat -c %Y $f)
     
-  $replayer $f DTLS12 $pno 30 3000 > /dev/null 2>&1 &
+  $replayer $f DTLS12 $pno 200 > /dev/null 2>&1 &
   CUSTOM_FUZZ_WOLFROOT="./wolfssl-gcov" LD_LIBRARY_PATH="./wolfssl-gcov/src/.libs:$LD_LIBRARY_PATH" timeout -k 0 3s $WORKDIR/wolfssl-gcov/examples/server/.libs/server -p $pno -i -x -s -u -l PSK-AES128-CBC-SHA256 > /dev/null 2>&1
 	 
   
@@ -52,7 +52,7 @@ count=0
 for f in $(echo $folder/$testdir/id*); do 
   time=$(stat -c %Y $f)
   
-  $replayer $f DTLS12 $pno 30 3000 > /dev/null 2>&1 &
+  $replayer $f DTLS12 $pno 200 > /dev/null 2>&1 &
   CUSTOM_FUZZ_WOLFROOT="./wolfssl-gcov" LD_LIBRARY_PATH="./wolfssl-gcov/src/.libs:$LD_LIBRARY_PATH" timeout -k 0 3s $WORKDIR/wolfssl-gcov/examples/server/.libs/server -p $pno -i -x -s -u -l PSK-AES128-CBC-SHA256 > /dev/null 2>&1
 
   wait

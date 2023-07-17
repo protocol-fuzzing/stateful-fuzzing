@@ -83,7 +83,7 @@ RUN cd $WORKDIR && \
 		git checkout 870f7cc && \
     patch -p1 < $WORKDIR/determ.patch && \
 		./autogen.sh && \
-		AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
+		AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure  --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 ## Download and compile WolfSSL for coverage analysis
@@ -93,7 +93,7 @@ RUN cd $WORKDIR && \
 		git checkout 870f7cc && \
     patch -p1 < $WORKDIR/determ.patch && \
 		./autogen.sh && \
-		CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
+		CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls

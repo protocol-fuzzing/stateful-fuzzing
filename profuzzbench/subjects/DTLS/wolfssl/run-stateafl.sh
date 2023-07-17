@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export TARGET_DIR="tinydtls-stateafl"
+export TARGET_DIR="wolfssl-stateafl"
 
 export INPUTS=${WORKDIR}/in-dtls-replay
