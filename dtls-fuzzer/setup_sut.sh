@@ -56,6 +56,9 @@ readonly GNUTLS_367='gnutls-3.6.7'
 readonly GNUTLS_367_ARCH_URL='ftp://ftp.gnutls.org/gcrypt/gnutls/v3.6/gnutls-3.6.7.tar.xz'
 readonly GNUTLS_3519='gnutls-3.5.19'
 readonly GNUTLS_3519_ARCH_URL='ftp://ftp.gnutls.org/gcrypt/gnutls/v3.5/gnutls-3.5.19.tar.xz'
+readonly GNUTLS='gnutls'
+readonly GNUTLS_REP_URL='https://gitlab.com/gnutls/gnutls.git'
+readonly GNUTLS_COMMIT='c4023afd'
 
 #readonly JSSE_ARCH_URL="https://github.com/assist-project/jsse-dtls-clientserver/archive/refs/tags/v1.0.0.tar.gz"
 readonly JSSE_LOCAL=$SOURCES_DIR/jsse-dtls-clientserver
@@ -164,7 +167,7 @@ readonly LIBTOOL="libtool-2.4.6"
 
 # Alphabetically
 sutvarnames=("ATINYDTLS" "CTINYDTLS" "ETINYDTLS" "ETINYDTLS_5e14e49" "ETINYDTLS_DEVELOP" \
-"GNUTLS_3519" "GNUTLS_367" "GNUTLS_371" "GNUTLS_LATEST" \
+"GNUTLS_3519" "GNUTLS_367" "GNUTLS_371" "GNUTLS_LATEST" "GNUTLS" \
 "JSSE_904" "JSSE_11010" "JSSE_1202" "JSSE_1302" "JSSE_1501" "JSSE_1601" \
 "MBEDTLS_2161" "MBEDTLS_2250" "MBEDTLS_2260" "MBEDTLS" \
 "SCANDIUM_OLD" "SCANDIUM_230" "SCANDIUM_262" "SCANDIUM_300_M2" \
@@ -174,7 +177,7 @@ sutvarnames=("ATINYDTLS" "CTINYDTLS" "ETINYDTLS" "ETINYDTLS_5e14e49" "ETINYDTLS_
 
 # Alphabetically
 sut_strings=($ATINYDTLS $CTINYDTLS $ETINYDTLS $ETINYDTLS_5e14e49 $ETINYDTLS_DEVELOP \
-$GNUTLS_3519 $GNUTLS_367 $GNUTLS_371 $GNUTLS_LATEST \
+$GNUTLS_3519 $GNUTLS_367 $GNUTLS_371 $GNUTLS_LATEST $GNUTLS \
 $JSSE_904 $JSSE_11010 $JSSE_1202 $JSSE_1302 $JSSE_1501 $JSSE_1601 \
 $MBEDTLS_2161 $MBEDTLS_2250 $MBEDTLS_2260 $MBEDTLS \
 $OPENSSL_111b $OPENSSL_111g $OPENSSL_111k $OPENSSL_111 $OPENSSL_300 \
@@ -452,7 +455,7 @@ function install_sut_dep() {
                 go get github.com/pion/dtls/v2@v$ver
             fi
         fi
-    elif [[ $sut == gnutls* ]]; then
+    elif [[ $sut == gnutls-* ]]; then
         install_dep $M4 $M4_ARCH_URL
         sudo apt-get install pkg-config
         nettle=`get_nettle $sut`
@@ -496,7 +499,11 @@ function make_sut() {
             if [[ ! -f ./configure ]]; then 
                 ./bootstrap
             fi
-            PKG_CONFIG_PATH="$MODULES_DIR/$nettle:$PKG_CONFIG_PATH" ./configure --enable-static --with-guile-site-dir=no --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-guile --disable-doc
+						if [[ $sut == $GNUTLS ]]; then
+            	PKG_CONFIG_PATH="$MODULES_DIR/$NETTLE_36:$PKG_CONFIG_PATH" ./configure --enable-static --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc
+						else
+            	PKG_CONFIG_PATH="$MODULES_DIR/$nettle:$PKG_CONFIG_PATH" ./configure --enable-static --with-guile-site-dir=no --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-guile --disable-doc
+						fi
         )
     elif [[ $sut == etinydtls* ]]; then
         ( cd $sut_dir ; ./autogen.sh ; ./configure )
