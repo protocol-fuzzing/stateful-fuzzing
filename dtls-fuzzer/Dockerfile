@@ -79,7 +79,7 @@ RUN wget https://github.com/assist-project/dtls-fuzzer/archive/refs/tags/usenix2
 # Set up the SUTs
 COPY --chown=ubuntu:ubuntu setup_sut.sh ${DTLS_FUZZER}/setup_sut.sh
 COPY --chown=ubuntu:ubuntu patches ${DTLS_FUZZER}/experiments/patches
-RUN cp -r /home/ubuntu/modules ${DTLS_FUZZER}/modules
+RUN mv /home/ubuntu/modules ${DTLS_FUZZER}/
 
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1

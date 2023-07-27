@@ -500,7 +500,7 @@ function make_sut() {
                 ./bootstrap
             fi
 						if [[ $sut == $GNUTLS ]]; then
-            	PKG_CONFIG_PATH="$MODULES_DIR/$NETTLE_36:$PKG_CONFIG_PATH" ./configure --enable-static --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc
+            	PKG_CONFIG_PATH="$MODULES_DIR/$NETTLE_36:$PKG_CONFIG_PATH" ./configure --enable-static --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --enable-fuzzer-target
 						else
             	PKG_CONFIG_PATH="$MODULES_DIR/$nettle:$PKG_CONFIG_PATH" ./configure --enable-static --with-guile-site-dir=no --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-guile --disable-doc
 						fi

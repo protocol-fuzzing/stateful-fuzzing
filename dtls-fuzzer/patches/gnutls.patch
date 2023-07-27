@@ -1,0 +1,49 @@
+diff --git a/lib/dtls.c b/lib/dtls.c
+index 7df4b26c6..364c0959c 100644
+--- a/lib/dtls.c
++++ b/lib/dtls.c
+@@ -795,6 +795,9 @@ unsigned int gnutls_dtls_get_timeout(gnutls_session_t session)
+ #define C_HASH GNUTLS_MAC_SHA1
+ #define C_HASH_SIZE 20
+ 
++#define FAKE_CLI_ADDR (void *)"test"
++#define FAKE_CLI_ADDR_LEN 4
++
+ /**
+  * gnutls_dtls_cookie_send:
+  * @key: is a random key to be used at cookie generation
+@@ -892,8 +895,8 @@ int gnutls_dtls_cookie_send(gnutls_datum_t *key, void *client_data,
+ 	hvr[hvr_size++] = 255;
+ 	hvr[hvr_size++] = COOKIE_SIZE;
+ 
+-	ret = _gnutls_mac_fast(C_HASH, key->data, key->size, client_data,
+-			       client_data_size, digest);
++	ret = _gnutls_mac_fast(C_HASH, key->data, key->size, FAKE_CLI_ADDR,
++			       FAKE_CLI_ADDR_LEN, digest);
+ 	if (ret < 0)
+ 		return gnutls_assert_val(ret);
+ 
+@@ -974,8 +977,8 @@ int gnutls_dtls_cookie_verify(gnutls_datum_t *key, void *client_data,
+ 		return gnutls_assert_val(GNUTLS_E_BAD_COOKIE);
+ 	}
+ 
+-	ret = _gnutls_mac_fast(C_HASH, key->data, key->size, client_data,
+-			       client_data_size, digest);
++	ret = _gnutls_mac_fast(C_HASH, key->data, key->size, FAKE_CLI_ADDR,
++			       FAKE_CLI_ADDR_LEN, digest);
+ 	if (ret < 0)
+ 		return gnutls_assert_val(ret);
+ 
+diff --git a/lib/gnutls_int.h b/lib/gnutls_int.h
+index 5b9c95fac..1de74c1a7 100644
+--- a/lib/gnutls_int.h
++++ b/lib/gnutls_int.h
+@@ -129,7 +129,7 @@ typedef int ssize_t;
+ 		 t)
+ 
+ /* DTLS */
+-#define DTLS_RETRANS_TIMEOUT 1000
++#define DTLS_RETRANS_TIMEOUT 100000
+ 
+ /* TLS Extensions */
+ /* we can receive up to MAX_EXT_TYPES extensions.
