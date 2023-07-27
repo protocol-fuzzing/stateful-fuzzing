@@ -1,0 +1,30 @@
+FROM profuzz-gnutls
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Set up AFL-ML
+ENV AFLML="/home/ubuntu/aflml"
+
+RUN git clone https://github.com/remiparrot/aflnet $AFLML && \
+    cd $AFLML && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+# Set up environment variables for AFL-ML
+ENV AFL_PATH=${AFLML}
+ENV PATH=${AFLML}:${PATH}
+
+# Dedicated instrumented version for AFL-ML
+#RUN cd $WORKDIR && \
+#    git clone https://gitlab.com/gnutls/gnutls.git gnutls-aflml && \
+#    cd gnutls-aflml && \
+#		git checkout c4023afd && \
+#    patch -p1 < $WORKDIR/determ.patch && \
+#		./bootstrap && \
+#		AFL_USE_ASAN=1 CC=afl-clang-fast PKG_CONFIG_PATH="$WORKDIR/modules/nettle-3.6:$PKG_CONFIG_PATH" ./configure --enable-static --with-included-libtasn1 --with-included-unistring --without-p11-kit --disable-doc --enable-fuzzer-target && \
+#    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
+COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
+
