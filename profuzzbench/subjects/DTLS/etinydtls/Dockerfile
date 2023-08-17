@@ -56,6 +56,11 @@ RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
+RUN git clone https://github.com/remiparrot/aflnet aflml && \
+    cd aflml && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
 ENV AFLNET="/home/ubuntu/aflnet"
@@ -97,5 +102,7 @@ RUN cd $WORKDIR && \
     cov=1 make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
+COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
