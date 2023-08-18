@@ -6,10 +6,10 @@ index 2f94c13393..49d13ca941 100644
      memcpy(buffer, &port, sizeof(port));
      BIO_ADDR_rawaddress(peer, buffer + sizeof(port), NULL);
  
-+		size_t length_cp = length;
++    size_t length_cp = length;
 +    unsigned char *buffer_cp = buffer;
-+		while (length_cp--)
-+			*buffer_cp++ = 0xEF;
++    while (length_cp--)
++        *buffer_cp++ = 0xEF;
 +
      /* Calculate HMAC of buffer using the secret */
      HMAC(EVP_sha1(), cookie_secret, COOKIE_SECRET_LENGTH,
@@ -84,9 +84,9 @@ index d32fa80cf8..42f2abd6c2 100644
 +//        rand_drbg_cleanup_additional_data(drbg->adin_pool, additional);
 +//
 +//    return ret;
-+		for (int i=0; i<outlen; i++)
-+			*out++ = i;
-+		return 1;
++    for (int i=0; i<outlen; i++)
++        *out++ = i;
++    return 1;
  }
  
  /*
@@ -110,9 +110,9 @@ index 3fdb56cb00..d96d1b9f63 100644
 +    //    return meth->bytes(buf, num);
 +    //RANDerr(RAND_F_RAND_BYTES, RAND_R_FUNC_NOT_IMPLEMENTED);
 +    //return -1;
-+		for (int i=0; i<num; i++)
-+			*buf++ = i;
-+		return 1;
++    for (int i=0; i<num; i++)
++        *buf++ = i;
++    return 1;
  }
  
  #if OPENSSL_API_COMPAT < 0x10100000L
