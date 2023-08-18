@@ -28,14 +28,14 @@ Run:
 cd dtls-fuzzer
 docker build -t dtls-fuzzer .
 ```
-See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more informations.
+See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
 ### To fuzz with AFLNet or StateAFL
 
 1. Produce some seeds
 
 Use the script `df_concretize_seeds.sh`, in the subfolder `dtls-fuzzer`.
-See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more informations.
+See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
 2. Copy the seeds in the fuzzing docker
 
@@ -60,19 +60,19 @@ cd profuzzbench
 source profuzz-init.sh
 profuzzbench_exec_common.sh profuzz-openssl-1.1.1 4 results-openssl-1.1.1/20230629/ aflnet out-openssl-aflnet "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -R -W 20 -m none -t 1000+" 172800 5
 ```
-See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more informations.
+See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more information.
 
 ### To fuzz with AFL-ML
 
 1. Learn the automata
 
 Use the script `df_learn_automata.sh`, in the subfolder `dtls-fuzzer`.
-See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more informations.
+See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
 2. Concretize seeds from the automata
 
 Use the script `df_concretize_automata_seeds.sh`, in the subfolder `dtls-fuzzer`.
-See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more informations.
+See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
 3. Copy the seeds in the fuzzing docker
 
@@ -91,4 +91,4 @@ cd profuzzbench
 source profuzz-init.sh
 profuzzbench_exec_common.sh profuzz-etinydtls 4 results-etinydtls/20230704/ aflml out-etinydtls-aflml "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -R -W 30 -m none -t 1000+" 172800 5
 ```
-See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more informations.
+See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more information.
