@@ -21,7 +21,7 @@ The fuzzing step is integrated in an extension of [ProFuzzBench](https://github.
 
 ## Workflow
 
-0. Build the docker for DTLS-Fuzzer
+### 0. Build the docker for DTLS-Fuzzer
 
 Run:
 ```sh
