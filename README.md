@@ -30,14 +30,14 @@ docker build -t dtls-fuzzer .
 ```
 See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
-### To fuzz with AFLNet or StateAFL
+### 1. To fuzz with AFLNet or StateAFL
 
-1. Produce some seeds
+1.1. Produce some seeds
 
 Use the script `df_concretize_seeds.sh`, in the subfolder `dtls-fuzzer`.
 See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
-2. Copy the seeds in the fuzzing docker
+1.2. Copy the seeds in the fuzzing docker
 
 For AFLNet, copy the files `*.raw` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls/`.
 Build the docker of the target SUT:
@@ -52,7 +52,7 @@ cd profuzzbench/subjects/DTLS/[SUT]/
 docker build -t profuzz-[SUT]-stateafl . -f Dockerfile-stateafl
 ```
 
-3. Run the fuzzing
+1.3. Run the fuzzing
 
 Use the script of ProFuzzBench to run the fuzzing, for example:
 ```sh
@@ -62,19 +62,19 @@ profuzzbench_exec_common.sh profuzz-openssl-1.1.1 4 results-openssl-1.1.1/202306
 ```
 See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more information.
 
-### To fuzz with AFL-ML
+### 2. To fuzz with AFL-ML
 
-1. Learn the automata
+2.1. Learn the automata
 
 Use the script `df_learn_automata.sh`, in the subfolder `dtls-fuzzer`.
 See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
-2. Concretize seeds from the automata
+2.2. Concretize seeds from the automata
 
 Use the script `df_concretize_automata_seeds.sh`, in the subfolder `dtls-fuzzer`.
 See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/dtls-fuzzer/README.md) for more information.
 
-3. Copy the seeds in the fuzzing docker
+2.3. Copy the seeds in the fuzzing docker
 
 Copy the files `*.replay` and `*.length` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls-aflml/`.
 Build the docker of the target SUT:
@@ -83,7 +83,7 @@ cd profuzzbench/subjects/DTLS/[SUT]/
 docker build -t profuzz-[SUT] . -f Dockerfile
 ```
 
-4. Run the fuzzing
+2.4. Run the fuzzing
 
 Use the script of ProFuzzBench to run the fuzzing, for example:
 ```sh
