@@ -4,6 +4,7 @@ This project regroups some tools for the fuzzing of communication protocol with 
 The technique used here consists in two steps:
  - first an automata representing the SUT (System Under Test) is learned,
  - then this model is used to drive the fuzzing.
+
 Each stage is performed inside a controlled environment i.e. a docker container.
 Thus we can ensure some consistency between the two steps, and hopefully produce better results.
 
@@ -79,7 +80,7 @@ Copy the files `*.replay` and `*.length` from the concretized seeds folder to th
 Build the docker of the target SUT:
 ```sh
 cd profuzzbench/subjects/DTLS/[SUT]/
-docker build -t profuzz-[SUT]-aflml . -f Dockerfile-aflml
+docker build -t profuzz-[SUT] . -f Dockerfile
 ```
 
 4. Run the fuzzing
@@ -88,6 +89,6 @@ Use the script of ProFuzzBench to run the fuzzing, for example:
 ```sh
 cd profuzzbench
 source profuzz-init.sh
-profuzzbench_exec_common.sh profuzz-etinydtls 4 results-etinydtls/20230704/ aflml out-openssl-aflml "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -R -W 30 -m none -t 1000+" 172800 5
+profuzzbench_exec_common.sh profuzz-etinydtls 4 results-etinydtls/20230704/ aflml out-etinydtls-aflml "-P DTLS12 -D 10000 -q 3 -s 3 -E -K -R -W 30 -m none -t 1000+" 172800 5
 ```
 See [profuzzbench/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/main/profuzzbench/README.md) for more informations.
