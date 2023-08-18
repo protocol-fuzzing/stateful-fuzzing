@@ -31,8 +31,9 @@ RUN apt-get -y update && \
 		automake \
 		libtool \
 		bsdmainutils \
-		tshark \
-		dash git-core gettext autopoint nettle-dev libp11-kit-dev libtspi-dev libunistring-dev libtasn1-bin libtasn1-6-dev libidn2-0-dev gawk gperf libtss2-dev libunbound-dev dns-root-data bison gtk-doc-tools libev-dev
+		tshark
+		#tshark \
+		#dash git-core gettext autopoint nettle-dev libp11-kit-dev libtspi-dev libunistring-dev libtasn1-bin libtasn1-6-dev libidn2-0-dev gawk gperf libtss2-dev libunbound-dev dns-root-data bison gtk-doc-tools libev-dev
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
@@ -87,7 +88,7 @@ RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls-5e14e49
-RUN cd ${DTLS_FUZZER} && ./setup_sut.sh gnutls
+#RUN cd ${DTLS_FUZZER} && ./setup_sut.sh gnutls
 
 COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
 COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples
