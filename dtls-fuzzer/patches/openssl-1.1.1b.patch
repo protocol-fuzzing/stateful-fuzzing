@@ -1,8 +1,7 @@
-diff --git a/apps/s_cb.c b/apps/s_cb.c
-index 2f94c13393..49d13ca941 100644
---- a/apps/s_cb.c
-+++ b/apps/s_cb.c
-@@ -793,6 +793,11 @@ int generate_cookie_callback(SSL *ssl, unsigned char *cookie,
+diff -u -r suts/openssl-1.1.1b/apps/s_cb.c suts/openssl-1.1.1b-patched/apps/s_cb.c
+--- suts/openssl-1.1.1b/apps/s_cb.c	2019-02-26 15:15:30.000000000 +0100
++++ suts/openssl-1.1.1b-patched/apps/s_cb.c	2023-08-18 15:15:47.744392931 +0200
+@@ -739,6 +739,11 @@
      memcpy(buffer, &port, sizeof(port));
      BIO_ADDR_rawaddress(peer, buffer + sizeof(port), NULL);
  
@@ -14,11 +13,10 @@ index 2f94c13393..49d13ca941 100644
      /* Calculate HMAC of buffer using the secret */
      HMAC(EVP_sha1(), cookie_secret, COOKIE_SECRET_LENGTH,
           buffer, length, cookie, cookie_len);
-diff --git a/crypto/rand/drbg_lib.c b/crypto/rand/drbg_lib.c
-index d32fa80cf8..42f2abd6c2 100644
---- a/crypto/rand/drbg_lib.c
-+++ b/crypto/rand/drbg_lib.c
-@@ -645,37 +645,40 @@ int RAND_DRBG_generate(RAND_DRBG *drbg, unsigned char *out, size_t outlen,
+diff -u -r suts/openssl-1.1.1b/crypto/rand/drbg_lib.c suts/openssl-1.1.1b-patched/crypto/rand/drbg_lib.c
+--- suts/openssl-1.1.1b/crypto/rand/drbg_lib.c	2019-02-26 15:15:30.000000000 +0100
++++ suts/openssl-1.1.1b-patched/crypto/rand/drbg_lib.c	2023-08-18 15:20:17.945002966 +0200
+@@ -656,37 +656,40 @@
   */
  int RAND_DRBG_bytes(RAND_DRBG *drbg, unsigned char *out, size_t outlen)
  {
@@ -30,7 +28,7 @@ index d32fa80cf8..42f2abd6c2 100644
 -    if (drbg->adin_pool == NULL) {
 -        if (drbg->type == 0)
 -            goto err;
--        drbg->adin_pool = rand_pool_new(0, 0, 0, drbg->max_adinlen);
+-        drbg->adin_pool = rand_pool_new(0, 0, drbg->max_adinlen);
 -        if (drbg->adin_pool == NULL)
 -            goto err;
 -    }
@@ -61,7 +59,7 @@ index d32fa80cf8..42f2abd6c2 100644
 +//    if (drbg->adin_pool == NULL) {
 +//        if (drbg->type == 0)
 +//            goto err;
-+//        drbg->adin_pool = rand_pool_new(0, 0, 0, drbg->max_adinlen);
++//        drbg->adin_pool = rand_pool_new(0, 0, drbg->max_adinlen);
 +//        if (drbg->adin_pool == NULL)
 +//            goto err;
 +//    }
@@ -85,42 +83,40 @@ index d32fa80cf8..42f2abd6c2 100644
 +//
 +//    return ret;
 +    for (int i=0; i<outlen; i++)
-+        *out++ = i;
++	*out++ = i;
 +    return 1;
  }
  
  /*
-diff --git a/crypto/rand/rand_lib.c b/crypto/rand/rand_lib.c
-index 3fdb56cb00..d96d1b9f63 100644
---- a/crypto/rand/rand_lib.c
-+++ b/crypto/rand/rand_lib.c
-@@ -939,12 +939,15 @@ int RAND_priv_bytes(unsigned char *buf, int num)
+diff -u -r suts/openssl-1.1.1b/crypto/rand/rand_lib.c suts/openssl-1.1.1b-patched/crypto/rand/rand_lib.c
+--- suts/openssl-1.1.1b/crypto/rand/rand_lib.c	2019-02-26 15:15:30.000000000 +0100
++++ suts/openssl-1.1.1b-patched/crypto/rand/rand_lib.c	2023-08-18 15:22:36.523366585 +0200
+@@ -830,12 +830,15 @@
  
  int RAND_bytes(unsigned char *buf, int num)
  {
 -    const RAND_METHOD *meth = RAND_get_rand_method();
 -
--    if (meth != NULL && meth->bytes != NULL)
+-    if (meth->bytes != NULL)
 -        return meth->bytes(buf, num);
 -    RANDerr(RAND_F_RAND_BYTES, RAND_R_FUNC_NOT_IMPLEMENTED);
 -    return -1;
-+    //const RAND_METHOD *meth = RAND_get_rand_method();
-+
-+    //if (meth != NULL && meth->bytes != NULL)
-+    //    return meth->bytes(buf, num);
-+    //RANDerr(RAND_F_RAND_BYTES, RAND_R_FUNC_NOT_IMPLEMENTED);
-+    //return -1;
-+    for (int i=0; i<num; i++)
-+        *buf++ = i;
-+    return 1;
++//    const RAND_METHOD *meth = RAND_get_rand_method();
++//
++//    if (meth->bytes != NULL)
++//        return meth->bytes(buf, num);
++//    RANDerr(RAND_F_RAND_BYTES, RAND_R_FUNC_NOT_IMPLEMENTED);
++//    return -1;
++     for (int i=0; i<num; i++)
++	*buf++ = i;
++     return 1;
  }
  
  #if OPENSSL_API_COMPAT < 0x10100000L
-diff --git a/ssl/d1_lib.c b/ssl/d1_lib.c
-index 05b85c1078..44f8a627ea 100644
---- a/ssl/d1_lib.c
-+++ b/ssl/d1_lib.c
-@@ -339,7 +339,7 @@ int dtls1_is_timer_expired(SSL *s)
+diff -u -r suts/openssl-1.1.1b/ssl/d1_lib.c suts/openssl-1.1.1b-patched/ssl/d1_lib.c
+--- suts/openssl-1.1.1b/ssl/d1_lib.c	2019-02-26 15:15:30.000000000 +0100
++++ suts/openssl-1.1.1b-patched/ssl/d1_lib.c	2023-08-18 15:23:26.116212364 +0200
+@@ -338,7 +338,7 @@
      }
  
      /* Timer expired, so return true */
@@ -128,4 +124,4 @@ index 05b85c1078..44f8a627ea 100644
 +    return 0;
  }
  
- static void dtls1_double_timeout(SSL *s)
+ void dtls1_double_timeout(SSL *s)
