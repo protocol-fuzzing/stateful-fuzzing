@@ -22,9 +22,9 @@ RUN apt-get -y update && \
     netcat \
     strace \
     wget \
-		libcap-dev \
-		pkg-config \
-		tshark
+    libcap-dev \
+    pkg-config \
+    tshark
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
@@ -56,6 +56,11 @@ RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
+RUN git clone https://github.com/remiparrot/aflnet aflml && \
+    cd aflml && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
 ENV AFLNET="/home/ubuntu/aflnet"
@@ -78,10 +83,10 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 RUN cd $WORKDIR && \
     git clone https://github.com/eclipse/tinydtls tinydtls && \
     cd tinydtls && \
-		git checkout 5e14e49 && \
+    git checkout 5e14e49 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
-		./autogen.sh && \
-		CC=afl-clang-fast ./configure && \
+    ./autogen.sh && \
+    CC=afl-clang-fast ./configure && \
     make clean && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
@@ -89,13 +94,15 @@ RUN cd $WORKDIR && \
 RUN cd $WORKDIR && \
     git clone https://github.com/eclipse/tinydtls tinydtls-gcov && \
     cd tinydtls-gcov && \
-		git checkout 5e14e49 && \
+    git checkout 5e14e49 && \
     patch -p1 < $WORKDIR/gcov.patch && \
-		./autogen.sh && \
-		./configure && \
+    ./autogen.sh && \
+    ./configure && \
     cov=1 make clean && \
     cov=1 make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
+COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
