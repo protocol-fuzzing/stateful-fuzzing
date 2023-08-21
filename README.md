@@ -39,13 +39,13 @@ See [dtls-fuzzer/README.md](https://github.com/remiparrot/stateful-fuzzing/blob/
 
 1.2 Copy the seeds in the fuzzing docker
 
-For AFLNet, copy the files `*.raw` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls/`.
+ - For AFLNet, copy the files `*.raw` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls/`.
 Build the docker of the target SUT:
 ```sh
 cd profuzzbench/subjects/DTLS/[SUT]/
 docker build -t profuzz-[SUT] .
 ```
-Then for StateAFL, copy the files `*.replay` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls-replay/`.
+ - For StateAFL, copy the files `*.replay` from the concretized seeds folder to the corresponding folder in ProFuzzBench: `profuzzbench/subjects/DTLS/[SUT]/in-dtls-replay/`.
 Build the docker of the target SUT:
 ```sh
 cd profuzzbench/subjects/DTLS/[SUT]/
