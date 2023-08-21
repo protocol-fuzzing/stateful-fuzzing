@@ -22,12 +22,12 @@ RUN apt-get -y update && \
     netcat \
     strace \
     wget \
-		libcap-dev \
-		pkg-config \
-		bsdmainutils \
-		automake \
-		libtool \
-		tshark
+    libcap-dev \
+    pkg-config \
+    bsdmainutils \
+    automake \
+    libtool \
+    tshark
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
@@ -49,13 +49,18 @@ COPY --chown=ubuntu:ubuntu aflnet.patch ${WORKDIR}/aflnet.patch
 # Set up fuzzers
 RUN git clone https://github.com/profuzzbench/aflnet.git && \
     cd aflnet && \
-		git checkout 0f51f9e && \
+    git checkout 0f51f9e && \
     patch -p1 < $WORKDIR/aflnet.patch && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
 RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     cd aflnwe && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
+RUN git clone https://github.com/remiparrot/aflnet aflml && \
+    cd aflml && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
@@ -80,23 +85,25 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 RUN cd $WORKDIR && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl && \
     cd wolfssl && \
-		git checkout 870f7cc && \
+    git checkout 870f7cc && \
     patch -p1 < $WORKDIR/determ.patch && \
-		./autogen.sh && \
-		AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure  --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
+    ./autogen.sh && \
+    AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure  --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 ## Download and compile WolfSSL for coverage analysis
 RUN cd $WORKDIR && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl-gcov && \
     cd wolfssl-gcov && \
-		git checkout 870f7cc && \
+    git checkout 870f7cc && \
     patch -p1 < $WORKDIR/determ.patch && \
-		./autogen.sh && \
-		CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
+    ./autogen.sh && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
+COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
 COPY --chown=ubuntu:ubuntu keystore ${WORKDIR}/keystore
