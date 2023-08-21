@@ -22,9 +22,9 @@ RUN apt-get -y update && \
     netcat \
     strace \
     wget \
-		libcap-dev \
-		pkg-config \
-		tshark
+    libcap-dev \
+    pkg-config \
+    tshark
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
@@ -56,6 +56,11 @@ RUN git clone https://github.com/profuzzbench/aflnwe.git && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
+RUN git clone https://github.com/remiparrot/aflnet aflml && \
+    cd aflml && \
+    make clean all $MAKE_OPT && \
+    cd llvm_mode && make $MAKE_OPT
+
 # Set up environment variables for AFLNet
 ENV WORKDIR="/home/ubuntu/experiments"
 ENV AFLNET="/home/ubuntu/aflnet"
@@ -77,21 +82,23 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 RUN cd $WORKDIR && \
     git clone https://github.com/openssl/openssl.git openssl && \
     cd openssl && \
-		git checkout 3f499b2 && \
+    git checkout 3f499b2 && \
     patch -p1 < $WORKDIR/determ.patch && \
-		AFL_USE_ASAN=1 CC=afl-clang-fast ./config enable-asan enable-fuzz-afl no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
+    AFL_USE_ASAN=1 CC=afl-clang-fast ./config enable-asan enable-fuzz-afl no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
 ## Download and compile OpenSSL-1.1.1 for coverage analysis
 RUN cd $WORKDIR && \
     git clone https://github.com/openssl/openssl.git openssl-gcov && \
     cd openssl-gcov && \
-		git checkout 3f499b2 && \
+    git checkout 3f499b2 && \
     patch -p1 < $WORKDIR/determ.patch && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
+COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml
 COPY --chown=ubuntu:ubuntu keystore ${WORKDIR}/keystore
