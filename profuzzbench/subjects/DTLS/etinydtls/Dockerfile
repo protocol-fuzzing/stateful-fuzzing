@@ -22,9 +22,9 @@ RUN apt-get -y update && \
     netcat \
     strace \
     wget \
-		libcap-dev \
-		pkg-config \
-		tshark
+    libcap-dev \
+    pkg-config \
+    tshark
 
 # Add a new user ubuntu, pass: ubuntu
 RUN groupadd ubuntu && \
@@ -83,10 +83,10 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 RUN cd $WORKDIR && \
     git clone https://github.com/eclipse/tinydtls tinydtls && \
     cd tinydtls && \
-		git checkout de74a02 && \
+    git checkout de74a02 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
-		./autogen.sh && \
-		CC=afl-clang-fast ./configure && \
+    ./autogen.sh && \
+    CC=afl-clang-fast ./configure && \
     make clean && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
@@ -94,10 +94,10 @@ RUN cd $WORKDIR && \
 RUN cd $WORKDIR && \
     git clone https://github.com/eclipse/tinydtls tinydtls-gcov && \
     cd tinydtls-gcov && \
-		git checkout de74a02 && \
+    git checkout de74a02 && \
     patch -p1 < $WORKDIR/gcov.patch && \
-		./autogen.sh && \
-		./configure && \
+    ./autogen.sh && \
+    ./configure && \
     cov=1 make clean && \
     cov=1 make $MAKE_OPT
 
