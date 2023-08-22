@@ -1,7 +1,7 @@
-diff -u -r suts/openssl-1.1.1b/apps/s_cb.c suts/openssl-1.1.1b-patched/apps/s_cb.c
---- suts/openssl-1.1.1b/apps/s_cb.c	2019-02-26 15:15:30.000000000 +0100
-+++ suts/openssl-1.1.1b-patched/apps/s_cb.c	2023-08-18 15:15:47.744392931 +0200
-@@ -739,6 +739,11 @@
+diff -ru a/apps/s_cb.c b/apps/s_cb.c
+--- a/apps/s_cb.c	2019-05-28 15:12:21.000000000 +0200
++++ b/apps/s_cb.c	2023-08-21 17:51:53.846177014 +0200
+@@ -786,6 +786,11 @@
      memcpy(buffer, &port, sizeof(port));
      BIO_ADDR_rawaddress(peer, buffer + sizeof(port), NULL);
  
@@ -13,9 +13,10 @@ diff -u -r suts/openssl-1.1.1b/apps/s_cb.c suts/openssl-1.1.1b-patched/apps/s_cb
      /* Calculate HMAC of buffer using the secret */
      HMAC(EVP_sha1(), cookie_secret, COOKIE_SECRET_LENGTH,
           buffer, length, cookie, cookie_len);
-diff -u -r suts/openssl-1.1.1b/crypto/rand/drbg_lib.c suts/openssl-1.1.1b-patched/crypto/rand/drbg_lib.c
---- suts/openssl-1.1.1b/crypto/rand/drbg_lib.c	2019-02-26 15:15:30.000000000 +0100
-+++ suts/openssl-1.1.1b-patched/crypto/rand/drbg_lib.c	2023-08-18 15:20:17.945002966 +0200
+Only in b/apps: s_cb.c.orig
+diff -ru a/crypto/rand/drbg_lib.c b/crypto/rand/drbg_lib.c
+--- a/crypto/rand/drbg_lib.c	2019-05-28 15:12:21.000000000 +0200
++++ b/crypto/rand/drbg_lib.c	2023-08-21 17:51:53.846177014 +0200
 @@ -656,37 +656,40 @@
   */
  int RAND_DRBG_bytes(RAND_DRBG *drbg, unsigned char *out, size_t outlen)
@@ -88,9 +89,9 @@ diff -u -r suts/openssl-1.1.1b/crypto/rand/drbg_lib.c suts/openssl-1.1.1b-patche
  }
  
  /*
-diff -u -r suts/openssl-1.1.1b/crypto/rand/rand_lib.c suts/openssl-1.1.1b-patched/crypto/rand/rand_lib.c
---- suts/openssl-1.1.1b/crypto/rand/rand_lib.c	2019-02-26 15:15:30.000000000 +0100
-+++ suts/openssl-1.1.1b-patched/crypto/rand/rand_lib.c	2023-08-18 15:22:36.523366585 +0200
+diff -ru a/crypto/rand/rand_lib.c b/crypto/rand/rand_lib.c
+--- a/crypto/rand/rand_lib.c	2019-05-28 15:12:21.000000000 +0200
++++ b/crypto/rand/rand_lib.c	2023-08-21 17:51:53.846177014 +0200
 @@ -830,12 +830,15 @@
  
  int RAND_bytes(unsigned char *buf, int num)
@@ -113,9 +114,9 @@ diff -u -r suts/openssl-1.1.1b/crypto/rand/rand_lib.c suts/openssl-1.1.1b-patche
  }
  
  #if OPENSSL_API_COMPAT < 0x10100000L
-diff -u -r suts/openssl-1.1.1b/ssl/d1_lib.c suts/openssl-1.1.1b-patched/ssl/d1_lib.c
---- suts/openssl-1.1.1b/ssl/d1_lib.c	2019-02-26 15:15:30.000000000 +0100
-+++ suts/openssl-1.1.1b-patched/ssl/d1_lib.c	2023-08-18 15:23:26.116212364 +0200
+diff -ru a/ssl/d1_lib.c b/ssl/d1_lib.c
+--- a/ssl/d1_lib.c	2019-05-28 15:12:21.000000000 +0200
++++ b/ssl/d1_lib.c	2023-08-21 17:51:53.850177083 +0200
 @@ -338,7 +338,7 @@
      }
  

@@ -349,6 +349,9 @@ function apply_patch() {
         if [[ -n "$rep_url" ]]; then
             echo "via git apply"
             ( cd $sut_dir; git apply $sut_patch )
+        elif [[ $sut == openssl-1.1.1c ]]; then
+            echo "via patch"
+	    ( cd $sut_dir; patch -p1 < $sut_patch )
         else 
             echo "via patch"
             patch -s -p0 < $sut_patch
