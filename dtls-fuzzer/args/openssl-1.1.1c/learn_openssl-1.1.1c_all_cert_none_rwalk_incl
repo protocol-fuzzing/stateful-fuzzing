@@ -10,11 +10,11 @@ localhost:30001
 10
 -queries
 20000
--alphabet 
+-alphabet
 examples/alphabets/dhe_ecdhe_psk_rsa_cert.xml
--output 
+-output
 output/openssl-1.1.1c_all_cert_none_rwalk_incl
--cmd 
+-cmd
 "${fuzzer.dir}/suts/openssl-1.1.1c/apps/openssl s_server -psk 1234 -key ${fuzzer.dir}/experiments/keystore/rsa2048_key.pem -cert ${fuzzer.dir}/experiments/keystore/rsa2048_cert.pem -CAfile ${fuzzer.dir}/experiments/keystore/rsa2048_cert.pem -accept 30001 -dtls1_2 -timeout -mtu 5000 -no_anti_replay"
 -sulConfig
 experiments/configs/include_oo.config
