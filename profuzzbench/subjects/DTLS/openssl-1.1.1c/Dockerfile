@@ -78,7 +78,7 @@ COPY --chown=ubuntu:ubuntu determ.patch ${WORKDIR}/determ.patch
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
 
-# Download and compile OpenSSL-1.1.1 for fuzzing
+# Download and compile OpenSSL-1.1.1c for fuzzing
 RUN cd $WORKDIR && \
     wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1c.tar.gz && \
     tar -xvf openssl-1.1.1c.tar.gz && \
@@ -88,15 +88,14 @@ RUN cd $WORKDIR && \
     AFL_USE_ASAN=1 CC=afl-clang-fast ./config enable-asan enable-fuzz-afl no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
 
-## Download and compile OpenSSL-1.1.1 for coverage analysis
+## Download and compile OpenSSL-1.1.1c for coverage analysis
 RUN cd $WORKDIR && \
-    wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1c.tar.gz && \
     tar -xvf openssl-1.1.1c.tar.gz && \
     mv openssl-1.1.1c openssl-gcov && \
     cd openssl-gcov && \
     patch -p1 < $WORKDIR/determ.patch && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" ./config no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
+    CFLAGS="--coverage" LDFLAGS="--coverage" ./config no-shared -DPEDANTIC enable-tls1_3 enable-weak-ssl-ciphers enable-rc5 enable-md2 enable-ssl3 enable-ssl3-method enable-nextprotoneg enable-ec_nistp_64_gcc_128 -fno-sanitize=alignment --debug && \
+    CFLAGS="--coverage" LDFLAGS="--coverage" make $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-dtls ${WORKDIR}/in-dtls
 COPY --chown=ubuntu:ubuntu in-dtls-aflml ${WORKDIR}/in-dtls-aflml
