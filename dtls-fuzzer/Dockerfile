@@ -45,6 +45,7 @@ RUN update-java-alternatives --set java-1.8.0-openjdk-amd64
 
 RUN pip3 install pydot
 
+## This is needed only for GNUTLS
 #RUN mkdir /home/ubuntu/modules && \
 #    cd /home/ubuntu/modules && \
 #    wget https://ftp.gnu.org/gnu/nettle/nettle-3.6.tar.gz && \
@@ -82,14 +83,14 @@ COPY --chown=ubuntu:ubuntu setup_sut.sh ${DTLS_FUZZER}/setup_sut.sh
 COPY --chown=ubuntu:ubuntu patches ${DTLS_FUZZER}/experiments/patches
 #RUN mv /home/ubuntu/modules ${DTLS_FUZZER}/
 
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls-5e14e49
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls
+#RUN cd ${DTLS_FUZZER} && ./setup_sut.sh gnutls
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1c
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
-RUN cd ${DTLS_FUZZER} && ./setup_sut.sh mbedtls
-RUN cd ${DTLS_FUZZER} && ./setup_sut.sh etinydtls-5e14e49
-#RUN cd ${DTLS_FUZZER} && ./setup_sut.sh gnutls
 
 COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
 COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples
