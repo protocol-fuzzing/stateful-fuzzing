@@ -20,4 +20,4 @@ wait
 
 docker cp ${cid}:${DTLS_FUZZER}/${DOCKER_OUTDIR}.tar.gz ${OUTDIR}/ > /dev/null
 printf "\nDeleting ${cid}"
-#docker rm ${cid} # Remove container now that we don't need it
+docker rm ${cid} # Remove container now that we don't need it
