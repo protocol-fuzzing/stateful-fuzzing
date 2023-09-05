@@ -30,26 +30,6 @@ else
   replayer="afl-replay"
 fi
 
-mkfifo $WORKDIR/stdin.fifo
-
-##process seeds first
-#for f in $(echo $folder/$testdir/*.raw); do 
-#  time=$(stat -c %Y $f)
-#    
-#  (sleep 3 ; echo "Q" > $WORKDIR/stdin.fifo) &
-#  $replayer $f DTLS12 $pno 40 > /dev/null 2>&1 &
-#  cat $WORKDIR/stdin.fifo | ./openssl-gcov/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ./keystore/rsa2048_key.pem -cert ./keystore/rsa2048_cert.pem -CAfile ./keystore/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay > /dev/null 2>&1
-#  
-#  wait
-#  cov_data=$(gcovr -r $WORKDIR/openssl-gcov -s | grep "[lb][a-z]*:")
-#  l_per=$(echo "$cov_data" | grep lines | cut -d" " -f2 | rev | cut -c2- | rev)
-#  l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
-#  b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
-#  b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-#  
-#  echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
-#done
-
 #process other testcases
 count=0
 for f in $(ls $folder/$testdir/id*); do 
@@ -57,9 +37,8 @@ for f in $(ls $folder/$testdir/id*); do
 
   time=$(stat -c %Y $f)
   
-  (sleep 3 ; echo "Q" > $WORKDIR/stdin.fifo) &
   $replayer $f DTLS12 $pno 40 > /dev/null 2>&1 &
-  cat $WORKDIR/stdin.fifo | ./openssl-gcov/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ./keystore/rsa2048_key.pem -cert ./keystore/rsa2048_cert.pem -CAfile ./keystore/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay > /dev/null 2>&1
+  timeout -k 0 4s bash -c "(sleep 3 ; echo 'Q') | ./openssl-gcov/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ./keystore/rsa2048_key.pem -cert ./keystore/rsa2048_cert.pem -CAfile ./keystore/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay"
 
   wait
   count=$(expr $count + 1)
@@ -88,4 +67,3 @@ then
   echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
 fi
 
-rm $WORKDIR/stdin.fifo
