@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-SUT="$1"			# SUT name (e.g., openssl-1.1.1) -- this name must match the name of the SUT folder inside the Docker container
+SUT="$1"	# SUT name (e.g., openssl-1.1.1) -- this name must match the name of the SUT folder inside the Docker container
 ARGSFILE="$2"	# Filename of the args for dtls-fuzzer
 TESTFILE="$3"	# Mandatory test-case for the learning
 OPTIONS="$4" 	# Additional options for learning
