@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-SUT="$1"			# SUT name (e.g., openssl-1.1.1) -- this name must match the name of the SUT folder inside the Docker container
+SUT="$1"	# SUT name (e.g., openssl-1.1.1) -- this name must match the name of the SUT folder inside the Docker container
 ABSFILES="$2"	# List of filename of the abstract seeds to concretize
 ARGSFILE="$3"	# Filename of the args for dtls-fuzzer
-OUTDIR="$4"		# Output directory
+OUTDIR="$4"	# Output directory
 
 cd ${DTLS_FUZZER}
 for f in ${ABSFILES} ; do
