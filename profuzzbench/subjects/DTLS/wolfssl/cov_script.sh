@@ -13,6 +13,7 @@ fmode=$5    #file mode -- structured or not
 rm $covfile; touch $covfile
 
 #clear gcov data
+echo "Initializing coverage data .."
 gcovr -r $WORKDIR/wolfssl-gcov -s -d > /dev/null 2>&1
 
 #output the header of the coverage file which is in the CSV format
@@ -29,36 +30,21 @@ else
   replayer="afl-replay"
 fi
 
-#process seeds first
-for f in $(echo $folder/$testdir/*.raw); do 
-  time=$(stat -c %Y $f)
-    
-  $replayer $f DTLS12 $pno 200 > /dev/null 2>&1 &
-  CUSTOM_FUZZ_WOLFROOT="./wolfssl-gcov" LD_LIBRARY_PATH="./wolfssl-gcov/src/.libs:$LD_LIBRARY_PATH" timeout -k 0 3s $WORKDIR/wolfssl-gcov/examples/server/.libs/server -p $pno -i -x -s -u -l PSK-AES128-CBC-SHA256 > /dev/null 2>&1
-	 
-  
-  wait
-  cov_data=$(gcovr -r $WORKDIR/wolfssl-gcov -s | grep "[lb][a-z]*:")
-  l_per=$(echo "$cov_data" | grep lines | cut -d" " -f2 | rev | cut -c2- | rev)
-  l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
-  b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
-  b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-  
-  echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
-done
-
 #process other testcases
 count=0
-for f in $(echo $folder/$testdir/id*); do 
+for f in $(ls $folder/$testdir/id*); do 
+  echo "Playing input $f"
+
   time=$(stat -c %Y $f)
   
   $replayer $f DTLS12 $pno 200 > /dev/null 2>&1 &
-  CUSTOM_FUZZ_WOLFROOT="./wolfssl-gcov" LD_LIBRARY_PATH="./wolfssl-gcov/src/.libs:$LD_LIBRARY_PATH" timeout -k 0 3s $WORKDIR/wolfssl-gcov/examples/server/.libs/server -p $pno -i -x -s -u -l PSK-AES128-CBC-SHA256 > /dev/null 2>&1
+  CUSTOM_FUZZ_WOLFROOT="./wolfssl-gcov" LD_LIBRARY_PATH="./wolfssl-gcov/src/.libs:$LD_LIBRARY_PATH" timeout -k 0 -s SIGUSR1 3s $WORKDIR/wolfssl-gcov/examples/server/.libs/server -p $pno -i -x -s -u -l PSK-AES128-CBC-SHA256 > /dev/null 2>&1
 
   wait
   count=$(expr $count + 1)
   rem=$(expr $count % $step)
   if [ "$rem" != "0" ]; then continue; fi
+  echo "Computing coverage so far .."
   cov_data=$(gcovr -r $WORKDIR/wolfssl-gcov -s | grep "[lb][a-z]*:")
   l_per=$(echo "$cov_data" | grep lines | cut -d" " -f2 | rev | cut -c2- | rev)
   l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)

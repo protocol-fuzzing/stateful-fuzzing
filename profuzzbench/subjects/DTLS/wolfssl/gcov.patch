@@ -1,0 +1,129 @@
+diff --git a/examples/server/server.c b/examples/server/server.c
+index 9b695a44f..87dc82460 100644
+--- a/examples/server/server.c
++++ b/examples/server/server.c
+@@ -3796,8 +3796,23 @@ exit:
+ /* so overall tests can pull in test function */
+ #ifndef NO_MAIN_DRIVER
+ 
++static void coverage_handle_signal(int sig)
++{
++	if(sig == SIGUSR1) {
++		printf("Stop on SIGUSR1.\n");
++		exit(0);
++	}
++}
++
+     int main(int argc, char** argv)
+     {
++	struct sigaction sa;
++	memset (&sa, 0, sizeof(sa));
++	sigemptyset(&sa.sa_mask);
++	sa.sa_handler = coverage_handle_signal;
++	sa.sa_flags = 0;
++	sigaction (SIGUSR1, &sa, NULL);
++
+         func_args args;
+         tcp_ready ready;
+ 
+diff --git a/src/dtls.c b/src/dtls.c
+index 11de01541..3fff6d2c6 100644
+--- a/src/dtls.c
++++ b/src/dtls.c
+@@ -193,11 +193,11 @@ static int CreateDtls12Cookie(const WOLFSSL* ssl, const WolfSSL_CH* ch,
+         ret = wc_HmacSetKey(&cookieHmac, DTLS_COOKIE_TYPE,
+             ssl->buffers.dtlsCookieSecret.buffer,
+             ssl->buffers.dtlsCookieSecret.length);
+-        if (ret == 0) {
+-            ret = wc_HmacUpdate(&cookieHmac,
+-                   (const byte*)ssl->buffers.dtlsCtx.peer.sa,
+-                                ssl->buffers.dtlsCtx.peer.sz);
+-        }
++        //if (ret == 0) {
++        //    ret = wc_HmacUpdate(&cookieHmac,
++        //           (const byte*)ssl->buffers.dtlsCtx.peer.sa,
++        //                        ssl->buffers.dtlsCtx.peer.sz);
++        //}
+         if (ret == 0)
+             ret = wc_HmacUpdate(&cookieHmac, (byte*)ch->pv, OPAQUE16_LEN);
+         if (ret == 0)
+diff --git a/wolfcrypt/src/random.c b/wolfcrypt/src/random.c
+index 885d973d5..8150fc9e1 100644
+--- a/wolfcrypt/src/random.c
++++ b/wolfcrypt/src/random.c
+@@ -1930,6 +1930,9 @@ int wc_RNG_GenerateBlock(WC_RNG* rng, byte* output, word32 sz)
+         ret = RNG_FAILURE_E;
+         rng->status = DRBG_FAILED;
+     }
++		for(unsigned int i=0; i<sz; i++) {
++				output[i] = i;
++		}
+ #else
+ 
+     /* if we get here then there is an RNG configuration error */
+diff --git a/wolfssl/internal.h b/wolfssl/internal.h
+index 33d6bdc49..9b85f9454 100644
+--- a/wolfssl/internal.h
++++ b/wolfssl/internal.h
+@@ -1724,8 +1724,8 @@ enum Misc {
+     CLIENT_HELLO_FIRST =  35,  /* Protocol + RAN_LEN + sizeof(id_len) */
+     MAX_SUITE_NAME     =  48,  /* maximum length of cipher suite string */
+ 
+-    DTLS_TIMEOUT_INIT       =  1, /* default timeout init for DTLS receive  */
+-    DTLS_TIMEOUT_MAX        = 64, /* default max timeout for DTLS receive */
++    DTLS_TIMEOUT_INIT       =320, /* default timeout init for DTLS receive  */
++    DTLS_TIMEOUT_MAX        =640, /* default max timeout for DTLS receive */
+     DTLS_TIMEOUT_MULTIPLIER =  2, /* default timeout multiplier for DTLS recv */
+ 
+     NULL_TERM_LEN        =   1,  /* length of null '\0' termination character */
+diff --git a/wolfssl/test.h b/wolfssl/test.h
+index b39b7d21a..b2b9c763e 100644
+--- a/wolfssl/test.h
++++ b/wolfssl/test.h
+@@ -2329,12 +2329,10 @@ static WC_INLINE unsigned int my_psk_client_cb(WOLFSSL* ssl, const char* hint,
+     if (wolfSSL_GetVersion(ssl) < WOLFSSL_TLSV1_3) {
+         /* test key in hex is 0x1a2b3c4d , in decimal 439,041,101 , we're using
+            unsigned binary */
+-        key[0] = 0x1a;
+-        key[1] = 0x2b;
+-        key[2] = 0x3c;
+-        key[3] = 0x4d;
++        key[0] = 0x12;
++        key[1] = 0x34;
+ 
+-        return 4;   /* length of key in octets or 0 for error */
++        return 2;   /* length of key in octets or 0 for error */
+     }
+     else {
+         int i;
+@@ -2364,12 +2362,10 @@ static WC_INLINE unsigned int my_psk_server_cb(WOLFSSL* ssl, const char* identit
+     if (wolfSSL_GetVersion(ssl) < WOLFSSL_TLSV1_3) {
+         /* test key in hex is 0x1a2b3c4d , in decimal 439,041,101 , we're using
+            unsigned binary */
+-        key[0] = 0x1a;
+-        key[1] = 0x2b;
+-        key[2] = 0x3c;
+-        key[3] = 0x4d;
++        key[0] = 0x12;
++        key[1] = 0x34;
+ 
+-        return 4;   /* length of key in octets or 0 for error */
++        return 2;   /* length of key in octets or 0 for error */
+     }
+     else {
+         int i;
+@@ -3075,6 +3071,14 @@ static WC_INLINE void CaCb(unsigned char* der, int sz, int type)
+         #if !defined(NO_FILESYSTEM) || defined(FORCE_BUFFER_TEST) && \
+             !defined(NETOS)
+             int depth;
++						const char *customroot = getenv("CUSTOM_FUZZ_WOLFROOT");
++						if(customroot != NULL && customroot[0] != '\0') {
++							chdir(customroot);
++						}
++						else {
++							err_sys("CUSTOM_FUZZ_WOLFROOT not found");
++						}
++
+             for(depth = 0; depth <= MAX_WOLF_ROOT_DEPTH; depth++) {
+                 int res;
+                 XFILE keyFile = XFOPEN(dhParamFile, "rb");
