@@ -1,0 +1,30 @@
+FROM uoscore-uedhoc
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Set up StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    rm as && \
+    cd llvm_mode && make $MAKE_OPT
+
+# Set up environment variables for StateAFL
+ENV AFL_PATH=${STATEAFL}
+ENV PATH=${STATEAFL}:${PATH}
+
+# Dedicated instrumented version for StateAFL
+RUN cd $WORKDIR && \
+    git clone --recurse-submodules https://github.com/eriptic/uoscore-uedhoc.git uoscore-uedhoc-stateafl && \
+    cd uoscore-uedhoc-stateafl && \
+    git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
+    patch -p1 < $WORKDIR/fuzzing.patch && \
+    make clean && \
+    CXX=${STATEAFL}/afl-clang-fast++ CC=${STATEAFL}/afl-clang-fast make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-edhoc-replay ${WORKDIR}/in-edhoc-replay
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+
