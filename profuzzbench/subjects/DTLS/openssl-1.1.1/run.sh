@@ -25,7 +25,7 @@ if $(strstr $FUZZER "afl"); then
   #Step-1. Do Fuzzing
   #Move to fuzzing folder
   cd $WORKDIR
-  LD_LIBRARY_PATH=${TARGET_DIR} timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./${TARGET_DIR}/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ${KEYSTORE}/rsa2048_key.pem -cert ${KEYSTORE}/rsa2048_cert.pem -CAfile ${KEYSTORE}/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay -naccept 1
+  LD_LIBRARY_PATH=${TARGET_DIR} timeout -k 0 --preserve-status $TIMEOUT /home/ubuntu/${FUZZER}/afl-fuzz -d -i ${INPUTS} -o $OUTDIR -N udp://127.0.0.1/20220 $OPTIONS ./${TARGET_DIR}/apps/openssl s_server -psk 1234 -accept 20220 -dtls1_2 -key ${KEYSTORE}/rsa2048_key.pem -cert ${KEYSTORE}/rsa2048_cert.pem -CAfile ${KEYSTORE}/rsa2048_cert.pem -timeout -mtu 5000 -no_anti_replay
 
   STATUS=$?
 
