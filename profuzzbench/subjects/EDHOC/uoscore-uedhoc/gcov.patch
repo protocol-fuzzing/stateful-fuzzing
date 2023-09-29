@@ -1,0 +1,37 @@
+diff --color -ru uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/src/main.cpp uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/src/main.cpp
+--- uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/src/main.cpp	2023-09-27 00:23:49.405870800 +0300
++++ uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/src/main.cpp	2023-09-27 00:27:02.963760300 +0300
+@@ -18,6 +18,8 @@
+ #include <sys/types.h>
+ #include <unistd.h>
+ #include <errno.h>
++#include <csignal>
++#include <cstring>
+ 
+ extern "C" {
+ #include "oscore.h"
+@@ -201,8 +203,24 @@
+ 	}
+ }
+ 
++static void coverage_handle_signal(int sig)
++{
++    if (sig == SIGUSR1)
++	{
++        printf("Stop on SIGUSR1.\n");
++        exit(0);
++    }
++}
++
+ int main()
+ {
++    struct sigaction sa;
++    std::memset(&sa, 0, sizeof(sa));
++    sigemptyset(&sa.sa_mask);
++    sa.sa_handler = coverage_handle_signal;
++    sa.sa_flags = 0;
++    sigaction(SIGUSR1, &sa, nullptr);
++
+ 	/*
+ 	 *  
+ 	 * 

@@ -24,8 +24,8 @@ for f in $(echo $folder/$testdir/id* | grep -v "*"); do
 
   echo $f
 
-  $replayer $f HTTP $pno 30 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s ./uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
+  $replayer $f DTLS12 $pno 30 > /dev/null 2>&1 &
+  timeout -k 0 -s SIGUSR1 3s $WORKDIR/uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
 
   wait
 

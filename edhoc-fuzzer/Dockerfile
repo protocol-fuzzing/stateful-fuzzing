@@ -60,8 +60,7 @@ ENV PATH="${PATH}:${SCRIPTS}"
 COPY --chown=ubuntu:ubuntu edhoc-fuzzer.patch ${WORKDIR}/edhoc-fuzzer.patch
 RUN cd ${WORKDIR} && \
     git clone https://github.com/protocol-fuzzing/edhoc-fuzzer && \
-    ls
-RUN cd ${EDHOC_FUZZER} && \
+    cd ${EDHOC_FUZZER} && \
     patch -p1 < ${WORKDIR}/edhoc-fuzzer.patch && \
     bash ./scripts/setup_fuzzer.sh -l
 

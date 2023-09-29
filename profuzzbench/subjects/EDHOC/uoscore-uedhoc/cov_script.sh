@@ -33,8 +33,8 @@ fi
 for f in $(echo $folder/$testdir/*.raw); do 
   time=$(stat -c %Y $f)
     
-  $replayer $f HTTP $pno 100 260000 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s ./uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
+  $replayer $f DTLS12 $pno 100 260000 > /dev/null 2>&1 &
+  timeout -k 0 -s SIGUSR1 3s $WORKDIR/uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
   
   wait
   cov_data=$(gcovr -r $WORKDIR/uoscore-uedhoc-gcov -s | grep "[lb][a-z]*:")
@@ -51,8 +51,8 @@ count=0
 for f in $(echo $folder/$testdir/id*); do 
   time=$(stat -c %Y $f)
   
-  $replayer $f HTTP $pno 100 260000 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s ./uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
+  $replayer $f DTLS12 $pno 100 260000 > /dev/null 2>&1 &
+  timeout -k 0 -s SIGUSR1 3s $WORKDIR/uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
 
   wait
   count=$(expr $count + 1)

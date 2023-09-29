@@ -38,7 +38,7 @@ diff --color -ru edhoc-fuzzer/src/main/java/com/github/protocolfuzzing/edhocfuzz
 +            byte[] val = edhocProtocolMessage.getPayload();
 +            byte[] len = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(val.length).array();
 +            FileOutputStream fosRep = new FileOutputStream("send.replay",true);
-+            fosRep.write(len);
++            if (val.length > 0) fosRep.write(len);
 +            fosRep.write(val);
 +            fosRep.close();
 +            FileOutputStream fosRaw = new FileOutputStream("send.raw",true);
@@ -90,7 +90,7 @@ diff --color -ru edhoc-fuzzer/src/main/java/com/github/protocolfuzzing/edhocfuzz
 +                byte[] val = responsePayload;
 +                byte[] len = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(val.length).array();
 +                FileOutputStream fosRep = new FileOutputStream("recv.replay",true);
-+                fosRep.write(len);
++                if (val.length > 0) fosRep.write(len);
 +                fosRep.write(val);
 +                fosRep.close();
 +                FileOutputStream fosRaw = new FileOutputStream("recv.raw",true);
