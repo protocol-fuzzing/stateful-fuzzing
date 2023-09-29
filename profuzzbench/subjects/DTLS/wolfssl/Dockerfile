@@ -76,7 +76,8 @@ ENV AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 \
 
 RUN mkdir $WORKDIR
 
-COPY --chown=ubuntu:ubuntu determ.patch ${WORKDIR}/determ.patch
+COPY --chown=ubuntu:ubuntu fuzzing.patch ${WORKDIR}/fuzzing.patch
+COPY --chown=ubuntu:ubuntu gcov.patch ${WORKDIR}/gcov.patch
 
 # Set up environment variables for ASAN
 env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_after_return=1:detect_container_overflow=0:poison_array_cookie=0:malloc_fill_byte=0:max_malloc_fill_size=16777216'
@@ -86,7 +87,7 @@ RUN cd $WORKDIR && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl && \
     cd wolfssl && \
     git checkout 870f7cc && \
-    patch -p1 < $WORKDIR/determ.patch && \
+    patch -p1 < $WORKDIR/fuzzing.patch && \
     ./autogen.sh && \
     AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure  --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
@@ -96,7 +97,7 @@ RUN cd $WORKDIR && \
     git clone https://github.com/wolfSSL/wolfssl wolfssl-gcov && \
     cd wolfssl-gcov && \
     git checkout 870f7cc && \
-    patch -p1 < $WORKDIR/determ.patch && \
+    patch -p1 < $WORKDIR/gcov.patch && \
     ./autogen.sh && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
     CFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make $MAKE_OPT
