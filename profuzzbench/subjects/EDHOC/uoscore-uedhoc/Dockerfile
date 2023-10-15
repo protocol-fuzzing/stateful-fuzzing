@@ -44,10 +44,10 @@ ARG MAKE_OPT
 COPY --chown=ubuntu:ubuntu aflnet.patch ${WORKDIR}/aflnet.patch
 
 # Set up fuzzers
-RUN git clone https://github.com/profuzzbench/aflnet.git && \
+RUN git clone https://github.com/aflnet/aflnet && \
     cd aflnet && \
 	git checkout 0f51f9e && \
-    patch -p1 < $WORKDIR/aflnet.patch && \
+    # patch -p1 < $WORKDIR/aflnet.patch && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
@@ -85,7 +85,7 @@ RUN cd $WORKDIR && \
     cd uoscore-uedhoc && \
     git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
-    make clean && \
+    make clean -C samples/linux_edhoc_oscore/responder_server && \
     AFL_USE_ASAN=1 CXX=afl-clang-fast++ CC=afl-clang-fast make -C samples/linux_edhoc_oscore/responder_server $MAKE_OPT
 
 # Download and compile uOSCORE / uEDHOC for coverage analysis
@@ -94,7 +94,7 @@ RUN cd $WORKDIR && \
     cd uoscore-uedhoc-gcov && \
     git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
     patch -p1 < $WORKDIR/gcov.patch && \
-    make clean && \
+    make clean -C samples/linux_edhoc_oscore/responder_server && \
     CFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make -C samples/linux_edhoc_oscore/responder_server $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-edhoc ${WORKDIR}/in-edhoc
