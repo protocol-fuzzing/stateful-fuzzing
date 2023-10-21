@@ -57,15 +57,16 @@ ENV AUTOMATA="/home/ubuntu/automata"
 ENV PATH="${PATH}:${SCRIPTS}"
 
 # Set up edhoc-fuzzer
-COPY --chown=ubuntu:ubuntu edhoc-fuzzer.patch ${WORKDIR}/edhoc-fuzzer.patch
 RUN cd ${WORKDIR} && \
     git clone https://github.com/protocol-fuzzing/edhoc-fuzzer && \
     cd ${EDHOC_FUZZER} && \
-    patch -p1 < ${WORKDIR}/edhoc-fuzzer.patch && \
     bash ./scripts/setup_fuzzer.sh -l
 
 # Set up the SUTs
-RUN cd ${EDHOC_FUZZER} && ./scripts/setup_sul.sh uoscore-uedhoc
+COPY --chown=ubuntu:ubuntu uoscore-uedhoc.patch ${WORKDIR}/uoscore-uedhoc.patch
+RUN cd ${EDHOC_FUZZER} && \
+    cat ${WORKDIR}/uoscore-uedhoc.patch >> ./experiments/models/patches/uoscore-uedhoc.patch && \
+    ./scripts/setup_sul.sh uoscore-uedhoc
 
 COPY --chown=ubuntu:ubuntu args ${EDHOC_FUZZER}/args
 COPY --chown=ubuntu:ubuntu examples ${EDHOC_FUZZER}/examples
