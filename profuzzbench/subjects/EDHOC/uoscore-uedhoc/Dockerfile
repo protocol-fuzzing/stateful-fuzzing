@@ -46,8 +46,8 @@ COPY --chown=ubuntu:ubuntu aflnet.patch ${WORKDIR}/aflnet.patch
 # Set up fuzzers
 RUN git clone https://github.com/aflnet/aflnet && \
     cd aflnet && \
-	git checkout 0f51f9e && \
-    # patch -p1 < $WORKDIR/aflnet.patch && \
+	git checkout 62d63a59230bb5f5c6e54cddd381b9425dba3726 && \
+    patch -p1 < $WORKDIR/aflnet.patch && \
     make clean all $MAKE_OPT && \
     cd llvm_mode && make $MAKE_OPT
 
@@ -99,6 +99,8 @@ RUN cd $WORKDIR && \
 
 COPY --chown=ubuntu:ubuntu in-edhoc ${WORKDIR}/in-edhoc
 COPY --chown=ubuntu:ubuntu in-edhoc-aflml ${WORKDIR}/in-edhoc-aflml
+COPY --chown=ubuntu:ubuntu in-edhoc-replay ${WORKDIR}/in-edhoc-replay
 COPY --chown=ubuntu:ubuntu cov_script.sh ${WORKDIR}/cov_script
 COPY --chown=ubuntu:ubuntu run.sh ${WORKDIR}/run
+COPY --chown=ubuntu:ubuntu run-aflnet.sh ${WORKDIR}/run-aflnet
 COPY --chown=ubuntu:ubuntu run-aflml.sh ${WORKDIR}/run-aflml

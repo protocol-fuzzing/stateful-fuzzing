@@ -1,8 +1,7 @@
-diff --git a/afl-fuzz.c b/afl-fuzz.c
-index 8023451..8c3993e 100644
---- a/afl-fuzz.c
-+++ b/afl-fuzz.c
-@@ -1021,8 +1021,8 @@ int send_over_network()
+diff --color -ru aflnet/afl-fuzz.c aflnet.patched/afl-fuzz.c
+--- aflnet/afl-fuzz.c	2023-09-22 03:29:54.000000000 +0300
++++ aflnet.patched/afl-fuzz.c	2023-10-21 00:22:15.476377300 +0300
+@@ -1023,8 +1023,8 @@
    //Set timeout for socket data sending/receiving -- otherwise it causes a big delay
    //if the server is still alive after processing all the requests
    struct timeval timeout;
@@ -13,33 +12,741 @@ index 8023451..8c3993e 100644
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
    memset(&serv_addr, '0', sizeof(serv_addr));
-diff --git a/afl-replay.c b/afl-replay.c
-index dfa43d0..bf61042 100644
---- a/afl-replay.c
-+++ b/afl-replay.c
-@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
+@@ -2231,6 +2231,68 @@
+ }
+ 
+ 
++/********************************************************/
++/* 		StateAFL bypasses response code extraction 		    */
++/* 		 and build a generic request extraction 		      */
++
++static unsigned int mutated_region_count = 0;
++static region_t* mutated_regions = NULL;
++
++region_t* extract_requests_generic(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref) {
++
++  unsigned int region_count = 0;
++  region_t *regions = NULL;
++
++  if(mutated_regions != NULL && mutated_region_count > 0) {
++
++    *region_count_ref = mutated_region_count;
++
++    regions = ck_alloc(mutated_region_count * sizeof(region_t));
++    memcpy(regions, mutated_regions, mutated_region_count * sizeof(region_t));
++
++    return regions;
++  }
++
++
++  unsigned int cur_start = 0;
++	unsigned int byte_count = 0;
++
++	while(byte_count < buf_size) {
++
++		if(byte_count + 4 >= buf_size) {
++			PFATAL("AFLNet - Erroreous message length in input file");
++		}
++
++		unsigned int next_message_len = *((unsigned int *)(void *)&buf[byte_count]);
++
++		byte_count += sizeof(unsigned int);
++
++		if(byte_count + next_message_len > buf_size) {
++			PFATAL("AFLNet - Erroneous message length in input file (2)");
++		}
++
++		region_count++;
++
++		regions = (region_t *)ck_realloc(regions, region_count * sizeof(region_t));
++
++		regions[region_count - 1].start_byte = cur_start;
++		regions[region_count - 1].end_byte = cur_start + next_message_len - 1;
++		//regions[region_count - 1].state_sequence = NULL;
++		//regions[region_count - 1].state_count = 0;
++
++		cur_start += next_message_len;
++		byte_count += next_message_len;
++
++	}
++
++	*region_count_ref = region_count;
++  return regions;
++
++}
++/* 					End of StateAFL						*/
++/********************************************************/
++
++
+ /* Load postprocessor, if available. */
+ 
+ static void setup_post(void) {
+@@ -3798,6 +3860,58 @@
+ }
+ 
+ 
++static u32 convert_from_replay_to_raw(u8* old_path, u8* new_path) {
++
++  FILE * sfd, * dfd;
++  char * buf = NULL;
++  unsigned int size;
++  u32 len = 0;
++
++  //unsigned int packet_count = 0;
++
++  sfd = fopen(old_path, "rb");
++  if (sfd == NULL) PFATAL("Unable to open '%s'", old_path);
++
++  dfd = fopen(new_path, "wb");
++  if (dfd == NULL) PFATAL("Unable to create '%s'", new_path);
++
++
++  while(!feof(sfd)) {
++
++    if (buf) {ck_free(buf); buf = NULL;}
++
++    clearerr(sfd);
++    if (fread(&size, sizeof(unsigned int), 1, sfd) > 0) {
++
++      //packet_count++;
++      //fprintf(stderr,"\nSize of the current packet %d is  %d\n", packet_count, size);
++      buf = (char *)ck_alloc(size);
++
++      clearerr(sfd);
++      fread(buf, size, 1, sfd);
++
++      if(feof(sfd) || ferror(sfd)) { PFATAL("AFLNet - Unable to read input file"); }
++
++      clearerr(dfd);
++      fwrite(buf, size, 1, dfd);
++
++      len += size;
++
++      if(feof(dfd) || ferror(dfd)) { PFATAL("AFLNet - Unable to write input file in output dir"); }
++    }
++    else { if(ferror(sfd)) PFATAL("AFLNet - Unable to read message len from input file"); }
++  }
++
++
++  ck_free(buf);
++  fclose(sfd);
++  fclose(dfd);
++
++  return len;
++
++}
++
++
+ static void nuke_resume_dir(void);
+ 
+ /* Create hard links for input test cases in the output directory, choosing
+@@ -3873,9 +3987,11 @@
+ 
+     /* Pivot to the new queue entry. */
+ 
+-    link_or_copy(q->fname, nfn);
++    //link_or_copy(q->fname, nfn);
++    u32 len = convert_from_replay_to_raw(q->fname, nfn);
+     ck_free(q->fname);
+     q->fname = nfn;
++    q->len = len;
+ 
+     /* Make sure that the passed_det value carries over, too. */
+ 
+@@ -5820,6 +5936,157 @@
+ }
+ 
+ 
++/***************************************************************/
++/* 												StateAFL										 		     */
++/* Utility functions for keeping track of mutations on regions */
++void regions_add_bytes(region_t* regions, unsigned int region_count, unsigned int position, int added_bytes) {
++
++#ifdef DEBUG_REGIONS
++   FILE * log=fopen("./regions.txt", "a");
++	 if (!log) PFATAL("Unable to open './regions.txt'");
++   fprintf(log, "add position=%d, bytes=%d\n", position, added_bytes);
++   fprintf(log, "regions = %p, region_count = %d\n", regions, region_count);
++
++   for(int i=0; i<region_count; i++) {
++     fprintf(log, "region %d: start=%d, end=%d\n", i, regions[i].start_byte, regions[i].end_byte);
++   }
++
++   fclose(log);
++#endif
++
++    int cur_region = 0;
++    while(cur_region < region_count && regions[cur_region].end_byte < position) {
++      cur_region++;
++    }
++
++    // Append bytes at end of last region
++    if(cur_region == region_count && regions[cur_region-1].end_byte + 1 == position) {
++      cur_region--;
++    }
++
++    regions[cur_region].end_byte += added_bytes;
++    cur_region++;
++
++    while(cur_region < region_count) {
++      regions[cur_region].start_byte += added_bytes;
++      regions[cur_region].end_byte += added_bytes;
++      cur_region++;
++    }
++}
++
++int regions_remove_bytes(region_t* regions, unsigned int region_count, unsigned int position, int removed_bytes) {
++
++#ifdef DEBUG_REGIONS
++   FILE * log=fopen("./regions.txt", "a");
++	 if (!log) PFATAL("Unable to open './regions.txt'");
++    fprintf(log, "remove position=%d, bytes=%d\n", position, removed_bytes);
++    fprintf(log, "regions = %p, region_count = %d\n", regions, region_count);
++
++    for(int i=0; i<region_count; i++) {
++      fprintf(log, "region %d: start=%d, end=%d\n", i, regions[i].start_byte, regions[i].end_byte);
++    }
++
++   fclose(log);
++#endif
++
++    int cur_region = 0;
++    while(cur_region < region_count && regions[cur_region].end_byte < position) {
++      cur_region++;
++    }
++
++    int to_remove = removed_bytes;
++    int removed = 0;
++    int removed_regions = 0;
++    int modified_regions = 0;
++
++    while(to_remove > 0) {
++
++      regions[cur_region].start_byte -= removed;
++      regions[cur_region].end_byte -= removed;
++
++      if(regions[cur_region].end_byte > position + to_remove - 1) {
++
++        regions[cur_region].end_byte -= to_remove;
++
++        removed += to_remove;
++        to_remove = 0;
++
++      } else {
++
++	if(regions[cur_region].start_byte != position) {
++
++          to_remove -= regions[cur_region].end_byte - position + 1;
++          removed = removed_bytes - to_remove;
++
++	  regions[cur_region].end_byte = position - 1;
++
++	}
++        else {
++
++	  // This region is marked to be removed
++	  // (bytes from "start" to "end" have all been deleted)
++
++          to_remove -= regions[cur_region].end_byte - position + 1;
++          removed = removed_bytes - to_remove;
++
++	  regions[cur_region].start_byte = -1;
++	  regions[cur_region].end_byte = -1;
++
++          removed_regions++;
++
++        }
++      }
++
++      cur_region++;
++      modified_regions++;
++    }
++
++    while(cur_region < region_count) {
++      regions[cur_region].start_byte -= removed_bytes;
++      regions[cur_region].end_byte -= removed_bytes;
++      cur_region++;
++    }
++
++    if(region_count > 1 && removed_regions > 0) {
++
++      unsigned int new_region_count = region_count - removed_regions;
++      region_t* new_regions = ck_alloc(new_region_count * sizeof(region_t));
++
++      int j=new_region_count-1;
++      for(int i=region_count-1; i>=0; i--) {
++
++        if(regions[i].start_byte == -1 && regions[i].end_byte == -1) {
++          continue;
++        }
++
++        new_regions[j].start_byte = regions[i].start_byte;
++        new_regions[j].end_byte = regions[i].end_byte;
++        //new_regions[j].state_sequence = regions[i].state_sequence;
++        //new_regions[j].state_count = regions[i].state_count;
++
++        j--;
++      }
++			//int j=0;
++			//for(unsigned i=0; i<region_count; i++) {
++			//	if(regions[i].start_byte!=-1 || regions[i].start_byte!=-1) {
++			//		new_regions[j].start_byte = regions[i].start_byte;
++			//		new_regions[j].end_byte = regions[i].end_byte;
++			//		j--;
++			//	}
++			//}
++
++      ck_free(mutated_regions);
++      mutated_regions = new_regions;
++      mutated_region_count = new_region_count;
++    }
++
++
++    return modified_regions;
++}
++/* 										End of StateAFL									 		     */
++/***************************************************************/
++
++
+ /* Take the current entry from the queue, fuzz it for a while. This
+    function is a tad too long... returns 0 if fuzzed successfully, 1 if
+    skipped or bailed out. */
+@@ -5997,6 +6264,24 @@
+ 
+   //Save the len for later use
+   M2_len = len;
++  
++  //Update regions to track mutations
++  unsigned int orig_region_count = M2_region_count;
++  region_t* orig_regions = ck_alloc(orig_region_count * sizeof(region_t));
++	memcpy(orig_regions, &queue_cur->regions[M2_start_region_ID], orig_region_count *sizeof(region_t));
++	// shift all regions to make them start at byte 0
++	if(orig_region_count > 0) {
++		int orig_regions_offset = orig_regions[0].start_byte;
++		for(u32 i_region=0; i_region<orig_region_count; i_region++) {
++			orig_regions[i_region].start_byte -= orig_regions_offset;
++			orig_regions[i_region].end_byte -= orig_regions_offset;
++		}
++	}
++
++  mutated_region_count = orig_region_count;
++  mutated_regions = ck_alloc(orig_region_count * sizeof(region_t));
++  memcpy(mutated_regions, orig_regions, orig_region_count * sizeof(region_t));
++
+ 
+   /*********************
+    * PERFORMANCE SCORE *
+@@ -6894,11 +7179,16 @@
+       /* Copy tail */
+       memcpy(ex_tmp + i + extras[j].len, out_buf + i, len - i);
+ 
++      /* Update mutated regions */
++      regions_add_bytes(mutated_regions, mutated_region_count, i, extras[j].len);
++
+       if (common_fuzz_stuff(argv, ex_tmp, len + extras[j].len)) {
+         ck_free(ex_tmp);
+         goto abandon_entry;
+       }
+ 
++      regions_remove_bytes(mutated_regions, mutated_region_count, i, extras[j].len);
++
+       stage_cur++;
+ 
+     }
+@@ -7012,6 +7302,11 @@
+   orig_hit_cnt = queued_paths + unique_crashes;
+ 
+   havoc_queued = queued_paths;
++  
++  //Update regions to track mutations
++  unsigned int pre_havoc_region_count = mutated_region_count;
++  region_t* pre_havoc_regions = ck_alloc(pre_havoc_region_count * sizeof(region_t));
++  memcpy(pre_havoc_regions, mutated_regions, pre_havoc_region_count * sizeof(region_t));
+ 
+   /* We essentially just do several thousand runs (depending on perf_score)
+      where we take the input file and make random stacked tweaks. */
+@@ -7219,6 +7514,9 @@
+                     temp_len - del_from - del_len);
+ 
+             temp_len -= del_len;
++            
++            /* Update mutated regions */
++            regions_remove_bytes(mutated_regions, mutated_region_count, del_from, del_len);
+ 
+             break;
+ 
+@@ -7270,6 +7568,9 @@
+             out_buf = new_buf;
+             temp_len += clone_len;
+ 
++            /* Update mutated regions */
++            regions_add_bytes(mutated_regions, mutated_region_count, clone_to, clone_len);
++
+           }
+ 
+           break;
+@@ -7390,6 +7691,9 @@
+             out_buf   = new_buf;
+             temp_len += extra_len;
+ 
++            /* Update mutated regions */
++            regions_add_bytes(mutated_regions, mutated_region_count, insert_at, extra_len);
++
+             break;
+ 
+           }
+@@ -7405,6 +7709,16 @@
+             ck_free(out_buf);
+             out_buf = new_buf;
+             temp_len = src_region_len;
++
++            /* Update mutated regions */
++            ck_free(mutated_regions);
++            mutated_region_count = 1;
++            mutated_regions = ck_alloc(sizeof(region_t));
++            mutated_regions[0].start_byte = 0;
++            mutated_regions[0].end_byte = src_region_len - 1;
++            //mutated_regions[0].state_sequence = NULL;
++            //mutated_regions[0].state_count = 0;
++
+             break;
+           }
+ 
+@@ -7429,6 +7743,27 @@
+             ck_free(src_region);
+             out_buf = new_buf;
+             temp_len += src_region_len;
++
++            /* Update mutated regions */
++            region_t* new_regions = ck_alloc((mutated_region_count + 1) * sizeof(region_t));
++            new_regions[0].start_byte = 0;
++            new_regions[0].end_byte = src_region_len - 1;
++            //new_regions[0].state_sequence = NULL;
++            //new_regions[0].state_count = 0;
++
++            memcpy(new_regions + 1, mutated_regions, mutated_region_count * sizeof(region_t));
++
++            for(int ii=1; ii<=mutated_region_count; ii++) {
++              new_regions[ii].start_byte += src_region_len;
++              new_regions[ii].end_byte += src_region_len;
++              //new_regions[ii].state_sequence = NULL;
++              //new_regions[ii].state_count = 0;
++            }
++
++            ck_free(mutated_regions);
++            mutated_regions = new_regions;
++            mutated_region_count++;
++
+             break;
+           }
+ 
+@@ -7453,6 +7788,20 @@
+             ck_free(src_region);
+             out_buf = new_buf;
+             temp_len += src_region_len;
++
++            /* Update mutated regions */
++            region_t* new_regions = ck_alloc((mutated_region_count + 1) * sizeof(region_t));
++            memcpy(new_regions, mutated_regions, mutated_region_count * sizeof(region_t));
++
++            new_regions[mutated_region_count].start_byte = new_regions[mutated_region_count-1].end_byte + 1;
++            new_regions[mutated_region_count].end_byte = new_regions[mutated_region_count-1].end_byte + src_region_len;
++            //new_regions[mutated_region_count].state_sequence = NULL;
++            //new_regions[mutated_region_count].state_count = 0;
++
++            ck_free(mutated_regions);
++            mutated_regions = new_regions;
++            mutated_region_count++;
++
+             break;
+           }
+ 
+@@ -7469,6 +7818,24 @@
+             ck_free(out_buf);
+             out_buf = new_buf;
+             temp_len += temp_len;
++
++            /* Update mutated regions */
++            int old_len = temp_len/2;
++            region_t* new_regions = ck_alloc(mutated_region_count * 2 * sizeof(region_t));
++            memcpy(new_regions, mutated_regions, mutated_region_count * sizeof(region_t));
++            memcpy(new_regions + mutated_region_count, mutated_regions, mutated_region_count * sizeof(region_t));
++
++            for(int ii=mutated_region_count; ii<mutated_region_count*2; ii++) {
++              new_regions[ii].start_byte += old_len;
++              new_regions[ii].end_byte += old_len;
++              //new_regions[ii].state_sequence = NULL;
++              //new_regions[ii].state_count = 0;
++            }
++
++            ck_free(mutated_regions);
++            mutated_regions = new_regions;
++            mutated_region_count *= 2;
++
+             break;
+           }
+ 
+@@ -7485,6 +7852,13 @@
+     if (temp_len < len) out_buf = ck_realloc(out_buf, len);
+     temp_len = len;
+     memcpy(out_buf, in_buf, len);
++    
++    /* Restore mutated regions */
++    ck_free(mutated_regions);
++    mutated_region_count = pre_havoc_region_count;
++    mutated_regions = ck_alloc(pre_havoc_region_count * sizeof(region_t));
++    memcpy(mutated_regions, pre_havoc_regions, pre_havoc_region_count * sizeof(region_t));
++
+ 
+     /* If we're finding new stuff, let's run for a bit longer, limits
+        permitting. */
+@@ -7501,6 +7875,10 @@
+     }
+ 
+   }
++  
++  ck_free(pre_havoc_regions);
++  pre_havoc_regions = NULL;
++  pre_havoc_region_count = 0;
+ 
+   new_hit_cnt = queued_paths + unique_crashes;
+ 
+@@ -7597,6 +7975,76 @@
+     ck_free(out_buf);
+     out_buf = ck_alloc_nozero(len);
+     memcpy(out_buf, in_buf, len);
++    
++    /* Restore mutated regions,
++     * we are splicing the original input with another one
++     * (note: in_buf has been reset to orig_buf if needed) */
++    ck_free(mutated_regions);
++    mutated_region_count = orig_region_count;
++    mutated_regions = ck_alloc(mutated_region_count * sizeof(region_t));
++    memcpy(mutated_regions, orig_regions, orig_region_count * sizeof(region_t));
++
++
++    /* Update mutated regions */
++    unsigned int first_region_count = 0;
++    while(mutated_regions[first_region_count].end_byte < split_at) {
++        first_region_count++;
++    }
++
++    unsigned int second_region_count = 0;
++    while(target->regions[target->region_count - 1 - second_region_count].start_byte > split_at) {
++        second_region_count++;
++    }
++
++    region_t* new_regions = ck_alloc((first_region_count + second_region_count + 1) * sizeof(region_t));
++
++    if(first_region_count > 0) {
++    	memcpy(new_regions, mutated_regions, first_region_count * sizeof(region_t));
++    }
++
++    if(second_region_count > 0) {
++    	memcpy(new_regions + first_region_count + 1, &target->regions[target->region_count - second_region_count], second_region_count * sizeof(region_t));
++    }
++
++    unsigned int splitted_region = first_region_count;
++
++    new_regions[splitted_region].start_byte = mutated_regions[first_region_count].start_byte;
++    new_regions[splitted_region].end_byte = target->regions[target->region_count - second_region_count - 1].end_byte;
++    //new_regions[splitted_region].state_sequence = NULL;
++    //new_regions[splitted_region].state_count = 0;
++
++#ifdef DEBUG_REGIONS
++   FILE * log=fopen("./regions.txt", "a");
++	 if (!log) PFATAL("Unable to open './regions.txt'");
++   fprintf(log, "splicing at position=%d\n", split_at);
++
++   fprintf(log, "FIRST\n");
++   fprintf(log, "regions = %p, region_count = %d\n", mutated_regions, mutated_region_count);
++
++   for(int i=0; i<mutated_region_count; i++) {
++     fprintf(log, "region %d: start=%d, end=%d\n", i, mutated_regions[i].start_byte, mutated_regions[i].end_byte);
++   }
++
++   fprintf(log, "SECOND\n");
++   fprintf(log, "regions = %p, region_count = %d\n", target->regions, target->region_count);
++
++   for(int i=0; i<target->region_count; i++) {
++     fprintf(log, "region %d: start=%d, end=%d\n", i, target->regions[i].start_byte, target->regions[i].end_byte);
++   }
++
++   fprintf(log, "SPLICED\n");
++   fprintf(log, "regions = %p, region_count = %d\n", new_regions, first_region_count + second_region_count + 1);
++
++   for(int i=0; i<first_region_count + second_region_count + 1; i++) {
++     fprintf(log, "region %d: start=%d, end=%d\n", i, new_regions[i].start_byte, new_regions[i].end_byte);
++   }
++
++   fclose(log);
++#endif
++
++    ck_free(mutated_regions);
++    mutated_regions = new_regions;
++    mutated_region_count = first_region_count + second_region_count + 1;
+ 
+     goto havoc_stage;
+ 
+@@ -7629,6 +8077,12 @@
+ 
+   delete_kl_messages(kl_messages);
+ 
++  ck_free(orig_regions);
++
++  ck_free(mutated_regions);
++  mutated_regions = NULL;
++  mutated_region_count = 0;
++
+   return ret_val;
+ 
+ #undef FLIP_BIT
+@@ -9085,6 +9539,9 @@
+         }else if (!strcmp(optarg, "SNMP")) {
+           extract_requests = &extract_requests_SNMP;
+           extract_response_codes = &extract_response_codes_SNMP;
++        } else if (!strcmp(optarg, "COAP")) {
++          extract_requests = &extract_requests_generic;
++          extract_response_codes = &extract_response_codes_coap;
+         } else {
+           FATAL("%s protocol is not supported yet!", optarg);
+         }
+diff --color -ru aflnet/afl-replay.c aflnet.patched/afl-replay.c
+--- aflnet/afl-replay.c	2023-09-22 03:29:54.000000000 +0300
++++ aflnet.patched/afl-replay.c	2023-10-21 00:49:56.775870900 +0300
+@@ -61,6 +61,7 @@
+   else if (!strcmp(argv[2], "SIP")) extract_response_codes = &extract_response_codes_sip;
+   else if (!strcmp(argv[2], "HTTP")) extract_response_codes = &extract_response_codes_http;
+   else if (!strcmp(argv[2], "IPP")) extract_response_codes = &extract_response_codes_ipp;
++  else if (!strcmp(argv[2], "COAP")) extract_response_codes = &extract_response_codes_coap;
+   else {fprintf(stderr, "[AFL-replay] Protocol %s has not been supported yet!\n", argv[2]); exit(1);}
+ 
+   portno = atoi(argv[3]);
+@@ -76,7 +77,7 @@
+   usleep(server_wait_usecs);
+ 
+   int sockfd;
+-  if ((!strcmp(argv[2], "DTLS12")) || (!strcmp(argv[2], "DNS")) || (!strcmp(argv[2], "SIP"))) {
++  if ((!strcmp(argv[2], "DTLS12")) || (!strcmp(argv[2], "DNS")) || (!strcmp(argv[2], "SIP")) || (!strcmp(argv[2], "COAP"))) {
+     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+   } else {
+     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+@@ -90,8 +91,8 @@
    //if the server is still alive after processing all the requests
    struct timeval timeout;
  
 -  timeout.tv_sec = 0;
 -  timeout.tv_usec = socket_timeout;
-+  timeout.tv_sec = socket_timeout / 1000000;
-+  timeout.tv_usec = socket_timeout % 1000000;
++	timeout.tv_sec = socket_timeout / 1000000;
++	timeout.tv_usec = socket_timeout % 1000000;
  
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
-diff --git a/aflnet-replay.c b/aflnet-replay.c
-index 7a5ae23..48e2e10 100644
---- a/aflnet-replay.c
-+++ b/aflnet-replay.c
-@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
+diff --color -ru aflnet/aflnet-replay.c aflnet.patched/aflnet-replay.c
+--- aflnet/aflnet-replay.c	2023-09-22 03:29:54.000000000 +0300
++++ aflnet.patched/aflnet-replay.c	2023-10-21 00:48:42.001076200 +0300
+@@ -51,7 +51,8 @@
+   else if (!strcmp(argv[2], "TFTP")) extract_response_codes = &extract_response_codes_tftp;
+   else if (!strcmp(argv[2], "NTP")) extract_response_codes = &extract_response_codes_NTP;
+   else if (!strcmp(argv[2], "DHCP")) extract_response_codes = &extract_response_codes_dhcp;
+-  else if (!strcmp(argv[2], "SNTP")) extract_response_codes = &extract_response_codes_SNTP;  
++  else if (!strcmp(argv[2], "SNTP")) extract_response_codes = &extract_response_codes_SNTP;
++  else if (!strcmp(argv[2], "COAP")) extract_response_codes = &extract_response_codes_coap;
+ else {fprintf(stderr, "[AFLNet-replay] Protocol %s has not been supported yet!\n", argv[2]); exit(1);}
+ 
+   portno = atoi(argv[3]);
+@@ -73,7 +74,7 @@
+   }
+ 
+   int sockfd;
+-  if ((!strcmp(argv[2], "DTLS12")) || (!strcmp(argv[2], "DNS")) || (!strcmp(argv[2], "SIP"))) {
++  if ((!strcmp(argv[2], "DTLS12")) || (!strcmp(argv[2], "DNS")) || (!strcmp(argv[2], "SIP")) || (!strcmp(argv[2], "COAP"))) {
+     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+   } else {
+     sockfd = socket(AF_INET, SOCK_STREAM, 0);
+@@ -87,8 +88,8 @@
    //if the server is still alive after processing all the requests
    struct timeval timeout;
  
 -  timeout.tv_sec = 0;
 -  timeout.tv_usec = socket_timeout;
-+  timeout.tv_sec = socket_timeout / 1000000;
-+  timeout.tv_usec = socket_timeout % 1000000;
++	timeout.tv_sec = socket_timeout / 1000000;
++	timeout.tv_usec = socket_timeout % 1000000;
  
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
+diff --color -ru aflnet/aflnet.c aflnet.patched/aflnet.c
+--- aflnet/aflnet.c	2023-09-22 03:29:54.000000000 +0300
++++ aflnet.patched/aflnet.c	2023-10-21 00:41:40.376570900 +0300
+@@ -2207,6 +2207,36 @@
+   return state_sequence;
+ }
+ 
++unsigned int* extract_response_codes_coap(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref)
++{
++  // FILE* file = fopen("/home/ubuntu/codes", "wb");
++  // fwrite(buf, sizeof(unsigned char), buf_size, file);
++  // fclose(file);
++  unsigned int byte_count = 0;
++  unsigned int *state_sequence = NULL;
++  unsigned int state_count = 0;
++
++  state_count++;
++  state_sequence = (unsigned int *)ck_realloc(state_sequence, state_count * sizeof(unsigned int));
++  state_sequence[state_count - 1] = 0;
++
++  while(byte_count < buf_size) {
++		unsigned int next_message_len = *((unsigned int *)(void *)&buf[byte_count]);
++
++		byte_count += sizeof(unsigned int);
++
++		state_count++;
++    unsigned int message_code = buf[byte_count + 1];
++    state_sequence = (unsigned int *)ck_realloc(state_sequence, state_count * sizeof(unsigned int));
++    state_sequence[state_count - 1] = message_code;
++
++		byte_count += next_message_len;
++	}
++
++  *state_count_ref = state_count;
++  return state_sequence;
++}
++
+ // kl_messages manipulating functions
+ 
+ klist_t(lms) *construct_kl_messages(u8* fname, region_t *regions, u32 region_count)
+@@ -2227,6 +2257,7 @@
+     m->mdata = (char *) ck_alloc(len);
+     m->msize = len;
+     if (m->mdata == NULL) PFATAL("Unable to allocate memory region to store new message");
++    fseek(fseed, regions[i].start_byte, SEEK_SET);
+     fread(m->mdata, 1, len, fseed);
+ 
+     //Insert the message to the linked list
+@@ -2379,10 +2410,11 @@
+       }
+       while (n > 0) {
+         usleep(10);
+-        *response_buf = (unsigned char *)ck_realloc(*response_buf, *len + n + 1);
+-        memcpy(&(*response_buf)[*len], temp_buf, n);
+-        (*response_buf)[(*len) + n] = '\0';
+-        *len = *len + n;
++        *response_buf = (unsigned char *)ck_realloc(*response_buf, *len + n + 1 + 4);
++        memcpy(&(*response_buf)[*len], &n, 4);
++        memcpy(&(*response_buf)[*len + 4], temp_buf, n);
++        (*response_buf)[(*len) + n + 4] = '\0';
++        *len = *len + n + 4;
+         n = recv(sockfd, temp_buf, sizeof(temp_buf), 0);
+         if ((n < 0) && (errno != EAGAIN)) {
+           return 1;
+diff --color -ru aflnet/aflnet.h aflnet.patched/aflnet.h
+--- aflnet/aflnet.h	2023-09-22 03:29:54.000000000 +0300
++++ aflnet.patched/aflnet.h	2023-10-25 01:07:19.561867400 +0300
+@@ -74,6 +74,7 @@
+ unsigned int* extract_response_codes_SNTP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ unsigned int* extract_response_codes_NTP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ unsigned int* extract_response_codes_SNMP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
++unsigned int* extract_response_codes_coap(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ extern unsigned int* (*extract_response_codes)(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
+ 
+ region_t* extract_requests_smtp(unsigned char* buf, unsigned int buf_size, unsigned int* region_count_ref);
