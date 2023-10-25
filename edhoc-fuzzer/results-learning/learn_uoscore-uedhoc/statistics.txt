@@ -1,0 +1,108 @@
+=== RUN DESCRIPTION ===
+Alphabet: [EDHOC_MESSAGE_1, EDHOC_MESSAGE_2, EDHOC_MESSAGE_3, EDHOC_MESSAGE_4, EDHOC_ERROR_MESSAGE, EDHOC_MESSAGE_3_OSCORE_APP, OSCORE_APP_MESSAGE, COAP_APP_MESSAGE, COAP_EMPTY_MESSAGE]
+
+StateFuzzerConfigStandard Parameters
+Help: false
+Debug: false
+Quiet: false
+Output Directory: experiments/results/servers/uoscore-uedhoc_linux_edhoc_oscore
+Fuzzing Client: false
+
+LearnerConfigStandard Parameters
+Alphabet: null
+Learning Algorithm: TTT
+Equivalence Algorithms: [W_METHOD, WP_METHOD]
+Max Depth: 1
+Min Length: 5
+Max Length: 15
+Max Equivalence Queries: 1000
+Runs Per Membership Query: 1
+Random Length: 5
+Membership Query Retries: 3
+Log Queries: true
+Prob Reset: 0.0
+Test File: null
+Seed: 0
+Cache Tests: true
+Ce Sanitization: true
+Skip Non Det Tests: true
+Ce Reruns: 3
+Probabilistic Sanitization: true
+Time Limit: null
+Test Limit: null
+Round Limit: null
+
+SulConfigStandard Parameters
+Response Wait: 3000
+Input Response Timeout: null
+Command: ./linux-edhoc-oscore-responder-server
+Terminate Command: null
+Process Dir: experiments/models/servers/uoscore-uedhoc
+Redirect Output Streams: false
+Process Trigger: NEW_TEST
+Start Wait: 50
+
+SulServerConfigStandard Parameters
+Connect to: localhost:5683
+
+MapperConfigStandard Parameters
+Mapper Connection Config: null
+Repeating Outputs: null
+Socket Closed as Timeout: false
+Disabled as Timeout: false
+Merge Repeating: true
+
+EdhocMapperConfig Parameters
+Protocol Version: v16
+Combined Message Version: v06
+Edhoc Role: Initiator
+Edhoc Coap Resource: .well-known/edhoc
+App Coap Resource: tv1
+App Message Code To Coap Server: GET
+App Message Payload To Coap Server: 
+App Message Code To Coap Client: CHANGED
+App Message Payload To Coap Client: Server Application Data
+Coap Error As Edhoc Error: false
+use Content Format: true
+use Session Reset: false
+use CX Correlation: false
+Own Connection Id: 36
+Force Oscore Sender Id: []
+Force Oscore Recipient Id: 01
+
+AuthenticationConfig Parameters
+Map Cred Type: X509
+Map Id Cred Type: X5T
+Sul Cred Type: X509
+Sul Id Cred Type: X5T
+Trust Model: STRICT
+
+TestVectorAuthenticationConfig Parameters
+Test Vector File: experiments/authentication/test_vectors/test_vectors_v16_p256.json
+Test Vector Key: test_vector_1
+Test Vector Peer Key Curve: P256
+
+SulAdapterConfigEmpty Non-Explicit Parameters
+Adapter Port: null
+Adapter Address: null
+
+=== STATISTICS ===
+Learning finished: true
+Size of the input alphabet: 9
+Number of states: 4
+Number of hypotheses: 2
+Number of inputs: 1385
+Number of tests: 369
+Number of learning inputs: 171
+Number of learning tests: 68
+Number of inputs up to last hypothesis: 179
+Number of tests up to last hypothesis: 72
+Time (ms) to learn model: 1171084
+Counterexamples:
+CE 1:Query[ε|EDHOC_MESSAGE_1 EDHOC_MESSAGE_1 / EDHOC_MESSAGE_2 TIMEOUT]
+Number of inputs when hypothesis was generated: [9, 179]
+Number of tests when hypothesis was generated: [9, 72]
+Time (ms) when hypothesis was generated: [26193, 228080]
+Number of inputs when counterexample was found: [17]
+Number of tests when counterexample was found: [13]
+Time (ms) when counterexample was found: [38792]
