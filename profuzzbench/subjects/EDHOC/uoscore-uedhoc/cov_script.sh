@@ -29,23 +29,6 @@ else
   replayer="afl-replay"
 fi
 
-#process seeds first
-for f in $(echo $folder/$testdir/*.raw); do 
-  time=$(stat -c %Y $f)
-    
-  $replayer $f DTLS12 $pno 100 260000 > /dev/null 2>&1 &
-  timeout -k 0 -s SIGUSR1 3s $WORKDIR/uoscore-uedhoc-gcov/samples/linux_edhoc_oscore/responder_server/build/responder_server > /dev/null 2>&1
-  
-  wait
-  cov_data=$(gcovr -r $WORKDIR/uoscore-uedhoc-gcov -s | grep "[lb][a-z]*:")
-  l_per=$(echo "$cov_data" | grep lines | cut -d" " -f2 | rev | cut -c2- | rev)
-  l_abs=$(echo "$cov_data" | grep lines | cut -d" " -f3 | cut -c2-)
-  b_per=$(echo "$cov_data" | grep branch | cut -d" " -f2 | rev | cut -c2- | rev)
-  b_abs=$(echo "$cov_data" | grep branch | cut -d" " -f3 | cut -c2-)
-  
-  echo "$time,$l_per,$l_abs,$b_per,$b_abs" >> $covfile
-done
-
 #process other testcases
 count=0
 for f in $(echo $folder/$testdir/id*); do 
