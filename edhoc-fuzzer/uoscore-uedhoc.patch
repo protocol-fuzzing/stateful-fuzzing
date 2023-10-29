@@ -1,106 +1,13 @@
 diff --color -ru uoscore-uedhoc/externals/mbedtls/library/entropy_poll.c uoscore-uedhoc.patched/externals/mbedtls/library/entropy_poll.c
---- uoscore-uedhoc/externals/mbedtls/library/entropy_poll.c	2023-10-16 00:10:30.867026800 +0300
-+++ uoscore-uedhoc.patched/externals/mbedtls/library/entropy_poll.c	2023-10-16 01:04:18.714400600 +0300
-@@ -189,20 +189,7 @@
-     return( 0 );
- #else
- 
--    *olen = 0;
--
--    file = fopen( "/dev/urandom", "rb" );
--    if( file == NULL )
--        return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
--
--    read_len = fread( output, 1, len, file );
--    if( read_len != len )
--    {
--        fclose( file );
--        return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
--    }
--
--    fclose( file );
-+    memset(output, 42, len);
-     *olen = len;
- 
-     return( 0 );
-diff --color -ru uoscore-uedhoc/externals/mbedtls/programs/pkey/gen_key.c uoscore-uedhoc.patched/externals/mbedtls/programs/pkey/gen_key.c
---- uoscore-uedhoc/externals/mbedtls/programs/pkey/gen_key.c	2023-10-16 00:10:31.199377400 +0300
-+++ uoscore-uedhoc.patched/externals/mbedtls/programs/pkey/gen_key.c	2023-10-16 01:00:55.880655800 +0300
-@@ -52,32 +52,9 @@
- int dev_random_entropy_poll( void *data, unsigned char *output,
-                              size_t len, size_t *olen )
- {
--    FILE *file;
--    size_t ret, left = len;
--    unsigned char *p = output;
-     ((void) data);
- 
--    *olen = 0;
--
--    file = fopen( "/dev/random", "rb" );
--    if( file == NULL )
--        return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
--
--    while( left > 0 )
--    {
--        /* /dev/random can return much less than requested. If so, try again */
--        ret = fread( p, 1, left, file );
--        if( ret == 0 && ferror( file ) )
--        {
--            fclose( file );
--            return( MBEDTLS_ERR_ENTROPY_SOURCE_FAILED );
--        }
--
--        p += ret;
--        left -= ret;
--        sleep( 1 );
--    }
--    fclose( file );
-+    memset(output, 42, len);
-     *olen = len;
- 
-     return( 0 );
-diff --color -ru uoscore-uedhoc/externals/tinycrypt/lib/source/ecc_platform_specific.c uoscore-uedhoc.patched/externals/tinycrypt/lib/source/ecc_platform_specific.c
---- uoscore-uedhoc/externals/tinycrypt/lib/source/ecc_platform_specific.c	2023-10-16 00:10:33.886475900 +0300
-+++ uoscore-uedhoc.patched/externals/tinycrypt/lib/source/ecc_platform_specific.c	2023-10-16 01:01:22.978070900 +0300
-@@ -77,27 +77,7 @@
-   if (dest == (uint8_t *) 0 || (size <= 0))
-     return 0;
- 
--  int fd = open("/dev/urandom", O_RDONLY | O_CLOEXEC);
--  if (fd == -1) {
--    fd = open("/dev/random", O_RDONLY | O_CLOEXEC);
--    if (fd == -1) {
--      return 0;
--    }
--  }
--
--  char *ptr = (char *)dest;
--  size_t left = (size_t) size;
--  while (left > 0) {
--    ssize_t bytes_read = read(fd, ptr, left);
--    if (bytes_read <= 0) { // read failed
--      close(fd);
--      return 0;
--    }
--    left -= bytes_read;
--    ptr += bytes_read;
--  }
--
--  close(fd);
-+  memset(dest, 42, size);
-   return 1;
+--- uoscore-uedhoc/externals/mbedtls/library/entropy_poll.c	2023-10-29 00:54:03.446166000 +0300
++++ uoscore-uedhoc.patched/externals/mbedtls/library/entropy_poll.c	2023-10-29 00:56:32.991168800 +0300
+@@ -101,7 +101,8 @@
+     memset( buf, 0, buflen );
+ #endif
+ #endif
+-    return( syscall( SYS_getrandom, buf, buflen, flags ) );
++    memset( buf, 42, buflen );
++    return( buflen );
  }
- 
-diff --color -ru uoscore-uedhoc/makefile_config.mk uoscore-uedhoc.patched/makefile_config.mk
---- uoscore-uedhoc/makefile_config.mk	2023-10-16 00:09:59.182744100 +0300
-+++ uoscore-uedhoc.patched/makefile_config.mk	2023-10-16 00:58:23.703743800 +0300
-@@ -79,6 +79,6 @@
- # | EDHOC  | 0/1/2/3 | 0/1/2/3 | MBEDTLS and COMPACT25519
- 
- 
--#CRYPTO_ENGINE += -DTINYCRYPT
-+CRYPTO_ENGINE += -DTINYCRYPT
- CRYPTO_ENGINE += -DCOMPACT25519
- CRYPTO_ENGINE += -DMBEDTLS
-\ No newline at end of file
+ #endif /* SYS_getrandom */
+ #endif /* __linux__ || __midipix__ */
