@@ -1,0 +1,134 @@
+diff --git a/afl-fuzz.c b/afl-fuzz.c
+index 3b0ed0a..f5a951b 100644
+--- a/afl-fuzz.c
++++ b/afl-fuzz.c
+@@ -140,8 +140,8 @@ EXP_ST u8  skip_deterministic,        /* Skip deterministic stages?       */
+            deferred_mode,             /* Deferred forkserver mode?        */
+            fast_cal;                  /* Try to calibrate faster?         */
+ 
+-static s32 out_fd,                    /* Persistent fd for out_file       */
+-           dev_urandom_fd = -1,       /* Persistent fd for /dev/urandom   */
++//static s32 out_fd,                    /* Persistent fd for out_file       */
++static s32 dev_urandom_fd = -1,       /* Persistent fd for /dev/urandom   */
+            dev_null_fd = -1,          /* Persistent fd for /dev/null      */
+            fsrv_ctl_fd,               /* Fork server control pipe (write) */
+            fsrv_st_fd;                /* Fork server status pipe (read)   */
+@@ -1023,8 +1023,8 @@ int send_over_network()
+   //Set timeout for socket data sending/receiving -- otherwise it causes a big delay
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout_usecs;
++  timeout.tv_sec = socket_timeout_usecs / 1000000;
++  timeout.tv_usec = socket_timeout_usecs % 1000000;
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
+   memset(&serv_addr, '0', sizeof(serv_addr));
+@@ -2931,12 +2931,13 @@ EXP_ST void init_forkserver(char** argv) {
+ 
+       dup2(dev_null_fd, 0);
+ 
+-    } else {
++    }
++    //else {
+ 
+-      dup2(out_fd, 0);
+-      close(out_fd);
++    //  dup2(out_fd, 0);
++    //  close(out_fd);
+ 
+-    }
++    //}
+ 
+     /* Set up control and status pipes, close the unneeded original fds. */
+ 
+@@ -3217,12 +3218,13 @@ static u8 run_target(char** argv, u32 timeout) {
+ 
+         dup2(dev_null_fd, 0);
+ 
+-      } else {
++      }
++      //else {
+ 
+-        dup2(out_fd, 0);
+-        close(out_fd);
++      //  dup2(out_fd, 0);
++      //  close(out_fd);
+ 
+-      }
++      //}
+ 
+       /* On Linux, would be faster to use O_CLOEXEC. Maybe TODO. */
+ 
+@@ -8267,19 +8269,19 @@ EXP_ST void setup_dirs_fds(void) {
+ 
+ /* Setup the output file for fuzzed data, if not using -f. */
+ 
+-EXP_ST void setup_stdio_file(void) {
+-
+-  u8* fn = alloc_printf("%s/.cur_input", out_dir);
+-
+-  unlink(fn); /* Ignore errors */
+-
+-  out_fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 0600);
+-
+-  if (out_fd < 0) PFATAL("Unable to create '%s'", fn);
+-
+-  ck_free(fn);
+-
+-}
++//EXP_ST void setup_stdio_file(void) {
++//
++//  u8* fn = alloc_printf("%s/.cur_input", out_dir);
++//
++//  unlink(fn); /* Ignore errors */
++//
++//  out_fd = open(fn, O_RDWR | O_CREAT | O_EXCL, 0600);
++//
++//  if (out_fd < 0) PFATAL("Unable to create '%s'", fn);
++//
++//  ck_free(fn);
++//
++//}
+ 
+ 
+ /* Make sure that core dumps don't go to a program. */
+@@ -9226,7 +9228,7 @@ int main(int argc, char** argv) {
+ 
+   detect_file_args(argv + optind + 1);
+ 
+-  if (!out_file) setup_stdio_file();
++  //if (!out_file) setup_stdio_file();
+ 
+   check_binary(argv[optind]);
+ 
+diff --git a/afl-replay.c b/afl-replay.c
+index 764259e..18c82e3 100644
+--- a/afl-replay.c
++++ b/afl-replay.c
+@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+ 
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout;
++  timeout.tv_sec = socket_timeout / 1000000;
++  timeout.tv_usec = socket_timeout % 1000000;
+ 
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 
+diff --git a/aflnet-replay.c b/aflnet-replay.c
+index 77758a2..24fe6a9 100644
+--- a/aflnet-replay.c
++++ b/aflnet-replay.c
+@@ -87,8 +87,8 @@ else {fprintf(stderr, "[AFLNet-replay] Protocol %s has not been supported yet!\n
+   //if the server is still alive after processing all the requests
+   struct timeval timeout;
+ 
+-  timeout.tv_sec = 0;
+-  timeout.tv_usec = socket_timeout;
++  timeout.tv_sec = socket_timeout / 1000000;
++  timeout.tv_usec = socket_timeout % 1000000;
+ 
+   setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
+ 

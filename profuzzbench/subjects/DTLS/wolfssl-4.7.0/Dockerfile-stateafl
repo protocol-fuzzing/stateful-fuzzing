@@ -1,0 +1,30 @@
+FROM profuzz-wolfssl
+
+# Import environment variable to pass as parameter to make (e.g., to make parallel builds with -j)
+ARG MAKE_OPT
+
+# Set up StateAFL
+ENV STATEAFL="/home/ubuntu/stateafl"
+
+RUN git clone https://github.com/stateafl/stateafl.git $STATEAFL && \
+    cd $STATEAFL && \
+    make clean all $MAKE_OPT && \
+    rm as && \
+    cd llvm_mode && make $MAKE_OPT
+
+# Set up environment variables for StateAFL
+ENV AFL_PATH=${STATEAFL}
+ENV PATH=${STATEAFL}:${PATH}
+
+# Dedicated instrumented version for StateAFL
+RUN cd $WORKDIR && \
+    git clone https://github.com/openssl/openssl.git openssl-aflml && \
+    cd openssl-aflml && \
+		git checkout 39ed41b && \
+    patch -p1 < $WORKDIR/determ.patch && \
+		AFL_USE_ASAN=1 CC=afl-clang-fast AM_CFLAGS='-DHAVE_AES_CBC -DWOLFSSL_AES_128' ./configure  --enable-dtls --enable-psk --enable-rsa --enable-sha --enable-debug --disable-dh --disable-ecc --enable-static C_EXTRA_FLAGS=-DWOLFSSL_STATIC_PSK && \
+    AFL_USE_ASAN=1 CC=afl-clang-fast make $MAKE_OPT
+
+COPY --chown=ubuntu:ubuntu in-dtls-replay ${WORKDIR}/in-dtls-replay
+COPY --chown=ubuntu:ubuntu run-stateafl.sh ${WORKDIR}/run-stateafl
+
