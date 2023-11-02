@@ -1,13 +1,3 @@
-diff --git a/examples/server/server.h b/examples/server/server.h
-index dbf492b13..95fb231f1 100644
---- a/examples/server/server.h
-+++ b/examples/server/server.h
-@@ -31,5 +31,4 @@ THREAD_RETURN WOLFSSL_THREAD server_test(void* args);
- int ServerEchoData(WOLFSSL* ssl, int clientfd, int echoData, int blockSize,
-                    size_t benchmarkThroughput);
- 
--
- #endif /* WOLFSSL_SERVER_H */
 diff --git a/src/dtls.c b/src/dtls.c
 index 11de01541..3fff6d2c6 100644
 --- a/src/dtls.c

@@ -1,0 +1,24 @@
+-connect
+localhost:60005
+-runWait
+200
+-alphabet
+examples/alphabets/psk.xml
+-timeout
+200
+-randLength
+10
+-queries
+20000
+-protocol
+DTLS12
+-output
+output/wolfssl-4.7.0_psk_rwalk
+-cmd
+"${fuzzer.dir}/suts/wolfssl-4.7.0/examples/server/server  -i -x -p 60005 -s -u -l PSK-AES128-CBC-SHA256"
+-processDir
+"${fuzzer.dir}/suts/wolfssl-4.7.0/"
+-depth
+1
+-ceReruns
+3

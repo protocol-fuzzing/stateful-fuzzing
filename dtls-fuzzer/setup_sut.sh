@@ -139,6 +139,8 @@ readonly WOLFSSL_440="wolfssl-4.4.0"
 readonly WOLFSSL_440_ARCH_URL='https://github.com/wolfSSL/wolfssl/archive/v4.4.0-stable.tar.gz'
 readonly WOLFSSL_471r="wolfssl-4.7.1r"
 readonly WOLFSSL_471r_ARCH_URL='https://github.com/wolfSSL/wolfssl/archive/refs/tags/v4.7.1r.tar.gz'
+readonly WOLFSSL_470="wolfssl-4.7.0"
+readonly WOLFSSL_470_ARCH_URL='https://github.com/wolfSSL/wolfssl/archive/v4.7.0-stable.tar.gz'
 readonly WOLFSSL="wolfssl"
 readonly WOLFSSL_REP_URL='https://github.com/wolfSSL/wolfssl'
 readonly WOLFSSL_COMMIT='870f7cc'
@@ -175,7 +177,7 @@ sutvarnames=("ATINYDTLS" "CTINYDTLS" "ETINYDTLS" "ETINYDTLS_5e14e49" "ETINYDTLS_
 "SCANDIUM_OLD" "SCANDIUM_230" "SCANDIUM_262" "SCANDIUM_300_M2" \
 "OPENSSL_111b" "OPENSSL_111c" "OPENSSL_111g" "OPENSSL_111k" "OPENSSL_111" "OPENSSL_300" \
 "PIONDTLS_USENIX" "PIONDTLS_152" "PIONDTLS_202" "PIONDTLS_209" \
-"WOLFSSL_400" "WOLFSSL_440 WOLFSSL_471r" "WOLFSSL")
+"WOLFSSL_400" "WOLFSSL_440" "WOLFSSL_471r" "WOLFSSL_470" "WOLFSSL")
 
 # Alphabetically
 sut_strings=($ATINYDTLS $CTINYDTLS $ETINYDTLS $ETINYDTLS_5e14e49 $ETINYDTLS_DEVELOP \
@@ -185,7 +187,7 @@ $MBEDTLS_2161 $MBEDTLS_2250 $MBEDTLS_2260 $MBEDTLS \
 $OPENSSL_111b $OPENSSL_111c $OPENSSL_111g $OPENSSL_111k $OPENSSL_111 $OPENSSL_300 \
 $PIONDTLS_USENIX $PIONDTLS_152 $PIONDTLS_202 $PIONDTLS_209 \
 $SCANDIUM_OLD $SCANDIUM_230 $SCANDIUM_262 $SCANDIUM_300_M2 \
-$WOLFSSL_400 $WOLFSSL_440 $WOLFSSL_471r $WOLFSSL)
+$WOLFSSL_400 $WOLFSSL_440 $WOLFSSL_471r $WOLFSSL_470 $WOLFSSL)
 
 # Options for when setting up SUT
 opt_no_patch=0
@@ -349,7 +351,7 @@ function apply_patch() {
         if [[ -n "$rep_url" ]]; then
             echo "via git apply"
             ( cd $sut_dir; git apply $sut_patch )
-        elif [[ $sut == openssl-1.1.1c ]]; then
+        elif [[ $sut == $OPENSSL_111c ]] || [[ $sut == $WOLFSSL_470 ]] || [[ $sut == $WOLFSSL_471r ]]; then
             echo "via patch"
 	    ( cd $sut_dir; patch -p1 < $sut_patch )
         else 

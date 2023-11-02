@@ -32,7 +32,7 @@ RUN apt-get -y update && \
     libtool \
     bsdmainutils \
     tshark
-    #tshark \
+## This is needed only for GNUTLS
     #dash git-core gettext autopoint nettle-dev libp11-kit-dev libtspi-dev libunistring-dev libtasn1-bin libtasn1-6-dev libidn2-0-dev gawk gperf libtss2-dev libunbound-dev dns-root-data bison gtk-doc-tools libev-dev
 
 # Add a new user ubuntu, pass: ubuntu
@@ -91,6 +91,8 @@ RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1c
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-1.1.1
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh openssl-3.0
 RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl-4.7.0
+RUN cd ${DTLS_FUZZER} && ./setup_sut.sh wolfssl-4.7.1r
 
 COPY --chown=ubuntu:ubuntu args ${DTLS_FUZZER}/args
 COPY --chown=ubuntu:ubuntu examples ${DTLS_FUZZER}/examples
