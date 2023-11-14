@@ -7,7 +7,7 @@ digraph g {
 	s0 -> s1  [label=" M1 / M2     "];
 	s0 -> s2  [label=" M2 / ∅\l M3 / ∅\l M4 / ∅\l APPᴄ / ∅\l APPᴏ / ∅\l EMPᴄ / ∅\l ERRᴇ / ∅\l M3APPᴏ / ∅     "];
 	s1 -> s2  [label=" M1 / ∅\l M2 / ∅\l M4 / ∅\l APPᴄ / ∅\l APPᴏ / ∅\l EMPᴄ / ∅\l ERRᴇ / ∅     "];
-	s1 -> s3  [label=" M3 / MSGᴄ\l M3APPᴏ / ∅     "];
+	s1 -> s3  [label=" M3 / ∅\l M3APPᴏ / ∅     "];
 	s2 -> s2  [label=" M1 / ⊥\l M2 / ⊥\l M3 / ⊥\l M4 / ⊥\l APPᴄ / ⊥\l APPᴏ / ⊥\l EMPᴄ / ⊥\l ERRᴇ / ⊥\l M3APPᴏ / ⊥     "];
 	s3 -> s3  [label=" M1 / MSGᴄ\l M2 / MSGᴄ\l M3 / MSGᴄ\l M4 / MSGᴄ\l APPᴄ / APPᴄ\l APPᴏ / APPᴏ\l EMPᴄ / MSGᴄ\l ERRᴇ / MSGᴄ\l M3APPᴏ / ∅     "];
 
