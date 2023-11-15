@@ -1,6 +1,6 @@
 diff --color -ru aflnet/afl-fuzz.c aflnet.patched/afl-fuzz.c
---- aflnet/afl-fuzz.c	2023-09-22 03:29:54.000000000 +0300
-+++ aflnet.patched/afl-fuzz.c	2023-10-21 00:22:15.476377300 +0300
+--- aflnet/afl-fuzz.c	2023-11-15 02:41:54.122228800 +0200
++++ aflnet.patched/afl-fuzz.c	2023-11-14 04:19:00.116248700 +0200
 @@ -1023,8 +1023,8 @@
    //Set timeout for socket data sending/receiving -- otherwise it causes a big delay
    //if the server is still alive after processing all the requests
@@ -612,8 +612,8 @@ diff --color -ru aflnet/afl-fuzz.c aflnet.patched/afl-fuzz.c
            FATAL("%s protocol is not supported yet!", optarg);
          }
 diff --color -ru aflnet/afl-replay.c aflnet.patched/afl-replay.c
---- aflnet/afl-replay.c	2023-09-22 03:29:54.000000000 +0300
-+++ aflnet.patched/afl-replay.c	2023-10-21 00:49:56.775870900 +0300
+--- aflnet/afl-replay.c	2023-11-15 02:41:54.122228800 +0200
++++ aflnet.patched/afl-replay.c	2023-11-13 23:37:48.260600800 +0200
 @@ -61,6 +61,7 @@
    else if (!strcmp(argv[2], "SIP")) extract_response_codes = &extract_response_codes_sip;
    else if (!strcmp(argv[2], "HTTP")) extract_response_codes = &extract_response_codes_http;
@@ -643,8 +643,8 @@ diff --color -ru aflnet/afl-replay.c aflnet.patched/afl-replay.c
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
 diff --color -ru aflnet/aflnet-replay.c aflnet.patched/aflnet-replay.c
---- aflnet/aflnet-replay.c	2023-09-22 03:29:54.000000000 +0300
-+++ aflnet.patched/aflnet-replay.c	2023-10-21 00:48:42.001076200 +0300
+--- aflnet/aflnet-replay.c	2023-11-15 02:41:54.137854100 +0200
++++ aflnet.patched/aflnet-replay.c	2023-11-14 04:09:39.437877800 +0200
 @@ -51,7 +51,8 @@
    else if (!strcmp(argv[2], "TFTP")) extract_response_codes = &extract_response_codes_tftp;
    else if (!strcmp(argv[2], "NTP")) extract_response_codes = &extract_response_codes_NTP;
@@ -676,17 +676,14 @@ diff --color -ru aflnet/aflnet-replay.c aflnet.patched/aflnet-replay.c
    setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout, sizeof(timeout));
  
 diff --color -ru aflnet/aflnet.c aflnet.patched/aflnet.c
---- aflnet/aflnet.c	2023-09-22 03:29:54.000000000 +0300
-+++ aflnet.patched/aflnet.c	2023-10-21 00:41:40.376570900 +0300
+--- aflnet/aflnet.c	2023-11-15 02:41:54.137854100 +0200
++++ aflnet.patched/aflnet.c	2023-11-15 02:27:47.615874300 +0200
 @@ -2207,6 +2207,36 @@
    return state_sequence;
  }
  
 +unsigned int* extract_response_codes_coap(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref)
 +{
-+  // FILE* file = fopen("/home/ubuntu/codes", "wb");
-+  // fwrite(buf, sizeof(unsigned char), buf_size, file);
-+  // fclose(file);
 +  unsigned int byte_count = 0;
 +  unsigned int *state_sequence = NULL;
 +  unsigned int state_count = 0;
@@ -695,13 +692,16 @@ diff --color -ru aflnet/aflnet.c aflnet.patched/aflnet.c
 +  state_sequence = (unsigned int *)ck_realloc(state_sequence, state_count * sizeof(unsigned int));
 +  state_sequence[state_count - 1] = 0;
 +
-+  while(byte_count < buf_size) {
++  while (byte_count < buf_size) {
 +		unsigned int next_message_len = *((unsigned int *)(void *)&buf[byte_count]);
++    if (next_message_len < 2) break;
 +
 +		byte_count += sizeof(unsigned int);
 +
-+		state_count++;
 +    unsigned int message_code = buf[byte_count + 1];
++    if (message_code == 0) break;
++    
++    state_count++;
 +    state_sequence = (unsigned int *)ck_realloc(state_sequence, state_count * sizeof(unsigned int));
 +    state_sequence[state_count - 1] = message_code;
 +
@@ -740,8 +740,8 @@ diff --color -ru aflnet/aflnet.c aflnet.patched/aflnet.c
          if ((n < 0) && (errno != EAGAIN)) {
            return 1;
 diff --color -ru aflnet/aflnet.h aflnet.patched/aflnet.h
---- aflnet/aflnet.h	2023-09-22 03:29:54.000000000 +0300
-+++ aflnet.patched/aflnet.h	2023-10-25 01:07:19.561867400 +0300
+--- aflnet/aflnet.h	2023-11-15 02:41:54.137854100 +0200
++++ aflnet.patched/aflnet.h	2023-11-13 23:37:48.292035700 +0200
 @@ -74,6 +74,7 @@
  unsigned int* extract_response_codes_SNTP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
  unsigned int* extract_response_codes_NTP(unsigned char* buf, unsigned int buf_size, unsigned int* state_count_ref);
