@@ -94,8 +94,8 @@ RUN cd $WORKDIR && \
     cd uoscore-uedhoc-gcov && \
     git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
     patch -p1 < $WORKDIR/gcov.patch && \
-    make clean -C samples/linux_edhoc_oscore/responder_server && \
-    CFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make -C samples/linux_edhoc_oscore/responder_server $MAKE_OPT
+    make clean -f samples/linux_edhoc_oscore/responder_server/Makefile && \
+    CFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make -f samples/linux_edhoc_oscore/responder_server/Makefile $MAKE_OPT
 
 COPY --chown=ubuntu:ubuntu in-edhoc ${WORKDIR}/in-edhoc
 COPY --chown=ubuntu:ubuntu in-edhoc-aflml ${WORKDIR}/in-edhoc-aflml

@@ -1,3 +1,169 @@
+diff --color -ru uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/Makefile uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/Makefile
+--- uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/Makefile	2023-11-18 02:08:38.854165000 +0200
++++ uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/Makefile	2023-11-19 03:17:51.181491500 +0200
+@@ -10,7 +10,7 @@
+ # in order to rebuild the uoscore-uedhoc.a and server application call: 
+ # make oscore_edhoc; make
+ 
+-include ../../../makefile_config.mk
++include makefile_config.mk
+ 
+ # toolchain
+ CXX ?= g++
+@@ -22,11 +22,10 @@
+ TARGET = responder_server
+ 
+ # build path
+-BUILD_DIR = build
++BUILD_DIR = samples/linux_edhoc_oscore/responder_server/build
+ 
+ # libusocore-uedhoc path
+-USOCORE_UEDHOC_PATH = ../../../
+-USOCORE_UEDHOC_BUILD_PATH = $(USOCORE_UEDHOC_PATH)build
++USOCORE_UEDHOC_BUILD_PATH = build
+ 
+ ifeq ($(ARCH_32_ONLY), 1)
+ # build for 32 bit x68 
+@@ -42,57 +41,57 @@
+ OPT = -Og
+ 
+ # CPP sources
+-CPP_SOURCES += src/main.cpp
+-CPP_SOURCES += ../../../externals/cantcoap/cantcoap.cpp
++CPP_SOURCES += samples/linux_edhoc_oscore/responder_server/src/main.cpp
++CPP_SOURCES += externals/cantcoap/cantcoap.cpp
+ 
+ # C sources 
+ # rename files avaible with the same name in diferent libraries
+ # todo clean up this
+-$(shell mv ../../../externals/compact25519/src/c25519/sha512.c ../../../externals/compact25519/src/c25519/_sha512.c )
+-$(shell mv ../../../externals/tinycrypt/lib/source/sha256.c ../../../externals/tinycrypt/lib/source/tc_sha256.c )
++$(shell mv externals/compact25519/src/c25519/sha512.c externals/compact25519/src/c25519/_sha512.c )
++$(shell mv externals/tinycrypt/lib/source/sha256.c externals/tinycrypt/lib/source/tc_sha256.c )
+ 
+-C_SOURCES += src/_entropy.c
+-C_SOURCES += $(wildcard ../../common/*.c)
+-C_SOURCES += $(wildcard ../../../externals/zcbor/src/*.c)
++C_SOURCES += samples/linux_edhoc_oscore/responder_server/src/_entropy.c
++C_SOURCES += $(wildcard samples/common/*.c)
++C_SOURCES += $(wildcard externals/zcbor/src/*.c)
+ 
+ # Crypto engine dependent source files
+ ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
+-C_SOURCES += $(wildcard ../../../externals/compact25519/src/c25519/*.c)
+-C_SOURCES += $(wildcard ../../../externals/compact25519/src/*.c)
++C_SOURCES += $(wildcard externals/compact25519/src/c25519/*.c)
++C_SOURCES += $(wildcard externals/compact25519/src/*.c)
+ endif
+ 
+ ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+-C_SOURCES += $(wildcard ../../../externals/tinycrypt/lib/source/*.c)
++C_SOURCES += $(wildcard externals/tinycrypt/lib/source/*.c)
+ endif
+  
+ ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
+-C_SOURCES += $(wildcard ../../../externals/mbedtls/library/*.c)
++C_SOURCES += $(wildcard externals/mbedtls/library/*.c)
+ endif
+ 
+-# C_SOURCES += $(wildcard ../../../externals/tinycrypt/lib/source/*.c)
++# C_SOURCES += $(wildcard externals/tinycrypt/lib/source/*.c)
+ 
+ # C includes
+-C_INCLUDES += -I../../../inc/ 
+-C_INCLUDES += -I../../common/
+-C_INCLUDES += -I../../../test_vectors/ 
+-C_INCLUDES += -I../../../externals/cantcoap/ 
+-C_INCLUDES += -I../../../externals/zcbor/include 
++C_INCLUDES += -Iinc/ 
++C_INCLUDES += -Isamples/common/
++C_INCLUDES += -Itest_vectors/ 
++C_INCLUDES += -Iexternals/cantcoap/ 
++C_INCLUDES += -Iexternals/zcbor/include 
+ 
+ # Crypto engine dependent includes
+ ifeq ($(findstring COMPACT25519,$(CRYPTO_ENGINE)),COMPACT25519) 
+-C_INCLUDES += -I../../../externals/compact25519/src/c25519/ 
+-C_INCLUDES += -I../../../externals/compact25519/src/ 
++C_INCLUDES += -Iexternals/compact25519/src/c25519/ 
++C_INCLUDES += -Iexternals/compact25519/src/ 
+ endif
+ 
+ ifeq ($(findstring TINYCRYPT,$(CRYPTO_ENGINE)),TINYCRYPT)
+-C_INCLUDES += -I../../../externals/tinycrypt/lib/include
++C_INCLUDES += -Iexternals/tinycrypt/lib/include
+ endif
+  
+ ifeq ($(findstring MBEDTLS,$(CRYPTO_ENGINE)),MBEDTLS)
+-C_INCLUDES += -I../../../externals/mbedtls/library 
+-C_INCLUDES += -I../../../externals/mbedtls/include 
+-C_INCLUDES += -I../../../externals/mbedtls/include/mbedtls 
+-C_INCLUDES += -I../../../externals/mbedtls/include/psa 
++C_INCLUDES += -Iexternals/mbedtls/library 
++C_INCLUDES += -Iexternals/mbedtls/include 
++C_INCLUDES += -Iexternals/mbedtls/include/mbedtls 
++C_INCLUDES += -Iexternals/mbedtls/include/psa 
+ endif
+ 
+ # C defines
+@@ -138,25 +137,25 @@
+ # default action: build all
+ ###########################################
+ #list of objects from c files
+-OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
++OBJECTS = $(C_SOURCES:.c=.o)
+ vpath %.c $(sort $(dir $(C_SOURCES)))
+ 
+ # list of objects from c++ file
+-OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(CPP_SOURCES:.cpp=.o)))
++OBJECTS += $(CPP_SOURCES:.cpp=.o)
+ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
+ 
+-USOCORE_UEDHOC_OBJ = $(wildcard $(USOCORE_UEDHOC_PATH)/*.o) 
++USOCORE_UEDHOC_OBJ = $(wildcard *.o) 
+ 
+ 
+ 
+-$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR) 
++%.o: %.cpp samples/linux_edhoc_oscore/responder_server/Makefile | $(BUILD_DIR) 
+ 	$(CXX) -c $(CXXFLAGS) $< -o $@
+ 
+-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
++%.o: %.c samples/linux_edhoc_oscore/responder_server/Makefile | $(BUILD_DIR) 
+ 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
+ 
+-$(BUILD_DIR)/$(TARGET): $(OBJECTS) Makefile $(USOCORE_UEDHOC_PATH)/Makefile $(USOCORE_UEDHOC_OBJ)
+-	$(MAKE) -C $(USOCORE_UEDHOC_PATH)
++$(BUILD_DIR)/$(TARGET): $(OBJECTS) samples/linux_edhoc_oscore/responder_server/Makefile Makefile $(USOCORE_UEDHOC_OBJ)
++	$(MAKE)
+ 	$(CXX) $(OBJECTS)  $(LDFLAGS) -o $@
+ 	$(SZ) $@
+ 
+@@ -166,16 +165,17 @@
+ 
+ 
+ oscore_edhoc:
+-	$(MAKE) -C $(USOCORE_UEDHOC_PATH)
++	$(MAKE)
+ 
+ clean_oscore_edhoc:
+-	$(MAKE) -C $(USOCORE_UEDHOC_PATH) clean
++	$(MAKE) clean
+ 
+ clean:
+-	-rm -fR $(BUILD_DIR)
+-	$(MAKE) -C $(USOCORE_UEDHOC_PATH) clean
++	-rm -fR $(BUILD_DIR) $(OBJECTS) $(C_SOURCES:.c=.d) $(CPP_SOURCES:.cpp=.d)
++	$(MAKE) clean
+ 
+ #######################################
+ # dependencies
+ #######################################
+--include $(wildcard $(BUILD_DIR)/*.d)
+\ No newline at end of file
++-include $(C_SOURCES:.c=.d)
++-include $(CPP_SOURCES:.cpp=.d)
+\ No newline at end of file
 diff --color -ru uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/src/main.cpp uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/src/main.cpp
 --- uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/src/main.cpp	2023-09-27 00:23:49.405870800 +0300
 +++ uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/src/main.cpp	2023-09-27 00:27:02.963760300 +0300
