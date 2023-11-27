@@ -1,3 +1,15 @@
+diff --color -ru uoscore-uedhoc/Makefile uoscore-uedhoc.patched/Makefile
+--- uoscore-uedhoc/Makefile	2023-11-24 04:30:19.538497100 +0200
++++ uoscore-uedhoc.patched/Makefile	2023-11-27 07:46:29.707086500 +0200
+@@ -99,7 +99,7 @@
+ EXTENDED_CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
+ 
+ # Generate stack usage information
+-EXTENDED_CFLAGS += -fstack-usage
++# EXTENDED_CFLAGS += -fstack-usage
+ 
+ # use C11
+ EXTENDED_CFLAGS += -std=c11
 diff --color -ru uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/Makefile uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/Makefile
 --- uoscore-uedhoc/samples/linux_edhoc_oscore/responder_server/Makefile	2023-09-15 00:08:22.287094000 +0300
 +++ uoscore-uedhoc.patched/samples/linux_edhoc_oscore/responder_server/Makefile	2023-09-15 00:17:53.166814300 +0300

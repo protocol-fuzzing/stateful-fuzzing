@@ -83,7 +83,7 @@ env ASAN_OPTIONS='abort_on_error=1:symbolize=0:detect_leaks=0:detect_stack_use_a
 RUN cd $WORKDIR && \
     git clone --recurse-submodules https://github.com/eriptic/uoscore-uedhoc.git uoscore-uedhoc && \
     cd uoscore-uedhoc && \
-    git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
+    git checkout 9c18a3503ad905e79e2dbe847cb14c1650524eee && \
     patch -p1 < $WORKDIR/fuzzing.patch && \
     make clean -C samples/linux_edhoc_oscore/responder_server && \
     AFL_USE_ASAN=1 CXX=afl-clang-fast++ CC=afl-clang-fast make -C samples/linux_edhoc_oscore/responder_server $MAKE_OPT
@@ -92,7 +92,7 @@ RUN cd $WORKDIR && \
 RUN cd $WORKDIR && \
     git clone --recurse-submodules https://github.com/eriptic/uoscore-uedhoc.git uoscore-uedhoc-gcov && \
     cd uoscore-uedhoc-gcov && \
-    git checkout 5fe2cb613bd7e4590bd1b00c2adf181ac0229379 && \
+    git checkout 9c18a3503ad905e79e2dbe847cb14c1650524eee && \
     patch -p1 < $WORKDIR/gcov.patch && \
     make clean -f samples/linux_edhoc_oscore/responder_server/Makefile && \
     CFLAGS="-fprofile-arcs -ftest-coverage" CXXFLAGS="-fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs -ftest-coverage" make -f samples/linux_edhoc_oscore/responder_server/Makefile $MAKE_OPT

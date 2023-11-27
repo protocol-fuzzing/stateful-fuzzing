@@ -98,12 +98,12 @@ Number of learning inputs: 171
 Number of learning tests: 68
 Number of inputs up to last hypothesis: 179
 Number of tests up to last hypothesis: 72
-Time (ms) to learn model: 1986075
+Time (ms) to learn model: 1980857
 Counterexamples:
 CE 1:Query[ε|EDHOC_MESSAGE_1 EDHOC_MESSAGE_1 / EDHOC_MESSAGE_2 TIMEOUT]
 Number of inputs when hypothesis was generated: [9, 179]
 Number of tests when hypothesis was generated: [9, 72]
-Time (ms) when hypothesis was generated: [41652, 373679]
+Time (ms) when hypothesis was generated: [41560, 373568]
 Number of inputs when counterexample was found: [17]
 Number of tests when counterexample was found: [13]
-Time (ms) when counterexample was found: [62117]
+Time (ms) when counterexample was found: [62022]
