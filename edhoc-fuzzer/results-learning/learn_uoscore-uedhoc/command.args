@@ -62,7 +62,7 @@ tv1
 
 ##### SulConfig #####
 -responseWait
-5000
+50
 -processDir
 ${models.servers}/uoscore-uedhoc
 -cmd
